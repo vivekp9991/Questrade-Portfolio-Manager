@@ -33,3 +33,15 @@ build/
 
 # Claude settings
 .claude/settings.local.json
+
+# Temporary files
+temp-*.json
+**/temp-*.json
+test-*.html
+
+# AWS & Deployment
+aws-config/credentials
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+serverless/.serverless/

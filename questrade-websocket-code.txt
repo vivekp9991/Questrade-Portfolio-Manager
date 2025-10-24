@@ -1,0 +1,701 @@
+QUESTRADE WEBSOCKET STREAMING ISSUE REPORT
+==========================================
+
+LANGUAGE: JavaScript (Node.js)
+LIBRARY: ws (WebSocket library for Node.js) v8.18.0
+
+ERROR DESCRIPTION:
+-----------------
+When attempting to connect to Questrade's WebSocket streaming API, the connection is immediately closed by the server with error code 1006 (ECONNRESET - socket hang up).
+
+ERROR LOG:
+----------
+2025-10-10T15:58:28.877Z [info]: [Proxy] Connecting to Questrade: wss://api01.iq.questrade.com/v1/markets/quotes/23960,2874671,54301064
+
+2025-10-10T15:58:30.151Z [error]: [Proxy] Questrade WebSocket error: socket hang up {"code":"ECONNRESET","stack":"Error: socket hang up"}
+
+2025-10-10T15:58:30.152Z [info]: [Proxy] Questrade WebSocket closed: 1006
+
+2025-10-10T15:58:30.152Z [error]: [Proxy] Failed to subscribe: socket hang up {"code":"ECONNRESET","stack":"Error: socket hang up"}
+
+CONNECTION DETAILS:
+------------------
+- URL Pattern: wss://api01.iq.questrade.com/v1/markets/quotes/{symbolIds}
+- Example: wss://api01.iq.questrade.com/v1/markets/quotes/23960,2874671,54301064
+- Symbol IDs: 23960 (XIU.TO), 2874671 (VFV.TO), 54301064 (HXT.TO)
+- Connection closes approximately 1.3 seconds after connection attempt
+- Error Code: 1006 (abnormal closure - no close frame received)
+
+WEBSOCKET CONNECTION CODE (Lines 189-259):
+==========================================
+
+/**
+ * Connect to Questrade WebSocket
+ */
+async connectToQuestrade(clientId, tokenData, symbolIds) {
+  const client = this.clients.get(clientId);
+  if (!client) return;
+
+  return new Promise((resolve, reject) => {
+    // Build WebSocket URL
+    const wsServer = tokenData.apiServer.replace('https://', 'wss://').replace('http://', 'ws://');
+    const idsParam = symbolIds.join(',');
+    const wsUrl = `${wsServer}/v1/markets/quotes/${idsParam}`;
+
+    logger.info(`[Proxy] Connecting to Questrade: ${wsUrl}`);
+
+    // Create WebSocket connection to Questrade with proper options
+    const questradeWs = new WebSocket(wsUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Origin': 'http://localhost:5173',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      rejectUnauthorized: false // Allow self-signed certificates
+    });
+    client.questradeWs = questradeWs;
+
+    // Handle connection open
+    questradeWs.on('open', () => {
+      logger.info(`[Proxy] Connected to Questrade WebSocket`);
+
+      // Send access token for authentication
+      questradeWs.send(tokenData.accessToken);
+      logger.debug(`[Proxy] Sent access token to Questrade`);
+    });
+
+    // Handle messages from Questrade
+    questradeWs.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        this.handleQuestradeMessage(clientId, data, symbolIds);
+
+        // Resolve promise on successful authentication
+        if (data.success === true && !client.isAuthenticated) {
+          client.isAuthenticated = true;
+          resolve();
+        }
+      } catch (error) {
+        logger.error(`[Proxy] Failed to parse Questrade message:`, error);
+      }
+    });
+
+    // Handle Questrade errors
+    questradeWs.on('error', (error) => {
+      logger.error(`[Proxy] Questrade WebSocket error:`, error);
+      this.sendToClient(clientId, {
+        type: 'error',
+        error: 'Questrade connection error'
+      });
+      reject(error);
+    });
+
+    // Handle Questrade disconnect
+    questradeWs.on('close', (code, reason) => {
+      logger.info(`[Proxy] Questrade WebSocket closed: ${code} ${reason}`);
+      client.isAuthenticated = false;
+      this.sendToClient(clientId, {
+        type: 'disconnected',
+        reason: 'Questrade connection closed'
+      });
+    });
+  });
+}
+
+MESSAGE HANDLING CODE (Lines 264-309):
+======================================
+
+/**
+ * Handle messages from Questrade WebSocket
+ */
+handleQuestradeMessage(clientId, data, symbolIds) {
+  const client = this.clients.get(clientId);
+  if (!client) return;
+
+  // Authentication response
+  if (data.success === true) {
+    logger.info(`[Proxy] Questrade authenticated successfully`);
+
+    // Subscribe to symbols
+    const subscribeMessage = {
+      mode: 'streaming',
+      ids: symbolIds
+    };
+    client.questradeWs.send(JSON.stringify(subscribeMessage));
+    logger.info(`[Proxy] Sent subscription request for ${symbolIds.length} symbols`);
+
+    // Notify client
+    this.sendToClient(clientId, {
+      type: 'authenticated',
+      message: 'Successfully connected to Questrade'
+    });
+
+    return;
+  }
+
+  // Error response
+  if (data.error) {
+    logger.error(`[Proxy] Questrade error:`, data.error);
+    this.sendToClient(clientId, {
+      type: 'error',
+      error: data.error
+    });
+    return;
+  }
+
+  // Quote update
+  if (data.symbolId !== undefined) {
+    logger.debug(`[Proxy] Quote update: symbolId=${data.symbolId}, price=${data.lastTradePrice}`);
+
+    // Forward quote to client
+    this.sendToClient(clientId, {
+      type: 'quote',
+      data: data
+    });
+  }
+}
+
+AUTHENTICATION FLOW:
+===================
+1. Get valid access token from Auth API (working - token is valid)
+2. Build WebSocket URL: wss://{apiServer}/v1/markets/quotes/{symbolIds}
+3. Connect to WebSocket
+4. On 'open' event: Send access token as plain text string
+5. Wait for authentication response with {success: true}
+6. Send subscription message: {"mode": "streaming", "ids": [symbolIds]}
+7. Receive quote updates
+
+CURRENT BEHAVIOR:
+================
+- Step 1-3: Successfully connect to WebSocket
+- Step 4: 'open' event fires, access token sent
+- PROBLEM: Connection immediately closes with code 1006 before receiving any response
+- The 'message' handler never receives any data from Questrade
+- No authentication response received
+- Connection terminates ~1.3 seconds after initiating
+
+ATTEMPTED VARIATIONS:
+====================
+We have also tried:
+1. URL format: wss://{apiServer}/v1/markets/quotes?ids={symbolIds}&stream=true&mode=RawSocket
+   - Same result: Connection closes with code 1006
+
+2. Different WebSocket headers (User-Agent, Origin, etc.)
+   - Same result
+
+QUESTIONS FOR QUESTRADE SUPPORT:
+================================
+1. Is the WebSocket URL format correct: wss://{apiServer}/v1/markets/quotes/{symbolIds}
+   OR should it be: wss://{apiServer}/v1/markets/quotes?ids={symbolIds}
+   OR another format?
+
+2. Should the access token be sent as:
+   - Plain text string (current approach)
+   - JSON object
+   - HTTP header during connection handshake
+   - Query parameter in the URL?
+
+3. Are there any additional headers or connection parameters required?
+
+4. What causes error code 1006 (abnormal closure)? Is the server rejecting the connection?
+
+5. Is there a specific WebSocket protocol or subprotocol we need to specify?
+
+6. Are server-side WebSocket connections allowed, or is this endpoint only for browser clients?
+
+ENVIRONMENT:
+===========
+- Platform: Windows 11
+- Node.js Version: v23.5.0
+- ws Library Version: 8.18.0
+- Access Token: Valid (works for REST API calls)
+- API Server: api01.iq.questrade.com
+- Connection Type: Server-to-Server (Node.js backend proxy for browser clients)
+
+COMPLETE SOURCE CODE FILES:
+===========================
+
+FILE 1: questradeWebSocketProxy.js (Main WebSocket Proxy Service)
+-----------------------------------------------------------------
+// src/services/questradeWebSocketProxy.js - Questrade WebSocket Proxy Service
+const WebSocket = require('ws');
+const axios = require('axios');
+const logger = require('../utils/logger');
+
+const AUTH_API_URL = process.env.AUTH_API_URL || 'http://localhost:4001';
+const MARKET_API_URL = process.env.MARKET_API_URL || 'http://localhost:4004';
+
+class QuestradeWebSocketProxy {
+  constructor() {
+    this.clients = new Map(); // clientId -> { ws, questradeWs, symbolIds, symbols, personName }
+  }
+
+  /**
+   * Handle new client connection from browser
+   */
+  async handleClientConnection(clientWs, request) {
+    const clientId = this.generateClientId();
+    logger.info(`[Proxy] New client connected: ${clientId}`);
+
+    // Store client info
+    this.clients.set(clientId, {
+      ws: clientWs,
+      questradeWs: null,
+      symbolIds: [],
+      symbols: [],
+      personName: 'Vivek', // Default, can be sent by client later
+      isAuthenticated: false
+    });
+
+    // Handle messages from browser client
+    clientWs.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        await this.handleClientMessage(clientId, data);
+      } catch (error) {
+        logger.error(`[Proxy] Failed to parse client message:`, error);
+        this.sendToClient(clientId, { error: 'Invalid message format' });
+      }
+    });
+
+    // Handle client disconnect
+    clientWs.on('close', () => {
+      logger.info(`[Proxy] Client disconnected: ${clientId}`);
+      this.disconnectClient(clientId);
+    });
+
+    // Handle client errors
+    clientWs.on('error', (error) => {
+      logger.error(`[Proxy] Client WebSocket error:`, error);
+    });
+
+    // Send welcome message
+    this.sendToClient(clientId, {
+      type: 'connected',
+      clientId,
+      message: 'Connected to Questrade WebSocket Proxy'
+    });
+  }
+
+  /**
+   * Handle messages from browser client
+   */
+  async handleClientMessage(clientId, data) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    logger.debug(`[Proxy] Client ${clientId} message:`, data);
+
+    switch (data.type) {
+      case 'subscribe':
+        // Client wants to subscribe to symbols
+        await this.subscribeToSymbols(clientId, data.symbols, data.personName || 'Vivek');
+        break;
+
+      case 'unsubscribe':
+        // Client wants to unsubscribe
+        this.disconnectFromQuestrade(clientId);
+        break;
+
+      case 'ping':
+        // Heartbeat from client
+        this.sendToClient(clientId, { type: 'pong' });
+        break;
+
+      default:
+        logger.warn(`[Proxy] Unknown message type: ${data.type}`);
+        this.sendToClient(clientId, { error: 'Unknown message type' });
+    }
+  }
+
+  /**
+   * Subscribe to symbols by connecting to Questrade WebSocket
+   */
+  async subscribeToSymbols(clientId, symbols, personName = 'Vivek') {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    try {
+      logger.info(`[Proxy] Client ${clientId} subscribing to ${symbols.length} symbols`);
+
+      // Update client info
+      client.symbols = symbols;
+      client.personName = personName;
+
+      // Step 1: Get access token from Auth API
+      const tokenData = await this.getAccessToken(personName);
+      logger.info(`[Proxy] Got access token for ${personName}`);
+
+      // Step 2: Get symbol IDs from Market API
+      const symbolIds = await this.getSymbolIds(symbols);
+      logger.info(`[Proxy] Got ${symbolIds.length} symbol IDs`);
+
+      if (symbolIds.length === 0) {
+        throw new Error('No valid symbol IDs found');
+      }
+
+      client.symbolIds = symbolIds;
+
+      // Step 3: Connect to Questrade WebSocket
+      await this.connectToQuestrade(clientId, tokenData, symbolIds);
+
+    } catch (error) {
+      logger.error(`[Proxy] Failed to subscribe:`, error);
+      this.sendToClient(clientId, {
+        type: 'error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get access token from Auth API
+   */
+  async getAccessToken(personName) {
+    try {
+      const response = await axios.get(`${AUTH_API_URL}/api/auth/access-token/${personName}`);
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to get access token');
+      }
+
+      return {
+        accessToken: response.data.data.accessToken,
+        apiServer: response.data.data.apiServer,
+        expiresAt: response.data.data.expiresAt
+      };
+    } catch (error) {
+      logger.error(`[Proxy] Failed to get access token:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get symbol IDs from Market API
+   */
+  async getSymbolIds(symbols) {
+    try {
+      const response = await axios.post(`${MARKET_API_URL}/api/symbols/lookup`, {
+        symbols
+      });
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to lookup symbols');
+      }
+
+      const symbolIds = [];
+      const symbolIdMap = {};
+
+      Object.entries(response.data.data).forEach(([symbol, info]) => {
+        if (info.symbolId) {
+          symbolIds.push(info.symbolId);
+          symbolIdMap[info.symbolId] = symbol;
+        }
+      });
+
+      return symbolIds;
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+      const errorStatus = error.response?.status;
+      logger.error(`[Proxy] Failed to get symbol IDs: ${errorMessage}`, { status: errorStatus });
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Connect to Questrade WebSocket
+   */
+  async connectToQuestrade(clientId, tokenData, symbolIds) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    return new Promise((resolve, reject) => {
+      // Build WebSocket URL
+      const wsServer = tokenData.apiServer.replace('https://', 'wss://').replace('http://', 'ws://');
+      const idsParam = symbolIds.join(',');
+      const wsUrl = `${wsServer}/v1/markets/quotes/${idsParam}`;
+
+      logger.info(`[Proxy] Connecting to Questrade: ${wsUrl}`);
+
+      // Create WebSocket connection to Questrade with proper options
+      const questradeWs = new WebSocket(wsUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Origin': 'http://localhost:5173',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept-Language': 'en-US,en;q=0.9'
+        },
+        rejectUnauthorized: false // Allow self-signed certificates
+      });
+      client.questradeWs = questradeWs;
+
+      // Handle connection open
+      questradeWs.on('open', () => {
+        logger.info(`[Proxy] Connected to Questrade WebSocket`);
+
+        // Send access token for authentication
+        questradeWs.send(tokenData.accessToken);
+        logger.debug(`[Proxy] Sent access token to Questrade`);
+      });
+
+      // Handle messages from Questrade
+      questradeWs.on('message', (message) => {
+        try {
+          const data = JSON.parse(message.toString());
+          this.handleQuestradeMessage(clientId, data, symbolIds);
+
+          // Resolve promise on successful authentication
+          if (data.success === true && !client.isAuthenticated) {
+            client.isAuthenticated = true;
+            resolve();
+          }
+        } catch (error) {
+          logger.error(`[Proxy] Failed to parse Questrade message:`, error);
+        }
+      });
+
+      // Handle Questrade errors
+      questradeWs.on('error', (error) => {
+        logger.error(`[Proxy] Questrade WebSocket error:`, error);
+        this.sendToClient(clientId, {
+          type: 'error',
+          error: 'Questrade connection error'
+        });
+        reject(error);
+      });
+
+      // Handle Questrade disconnect
+      questradeWs.on('close', (code, reason) => {
+        logger.info(`[Proxy] Questrade WebSocket closed: ${code} ${reason}`);
+        client.isAuthenticated = false;
+        this.sendToClient(clientId, {
+          type: 'disconnected',
+          reason: 'Questrade connection closed'
+        });
+      });
+    });
+  }
+
+  /**
+   * Handle messages from Questrade WebSocket
+   */
+  handleQuestradeMessage(clientId, data, symbolIds) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    // Authentication response
+    if (data.success === true) {
+      logger.info(`[Proxy] Questrade authenticated successfully`);
+
+      // Subscribe to symbols
+      const subscribeMessage = {
+        mode: 'streaming',
+        ids: symbolIds
+      };
+      client.questradeWs.send(JSON.stringify(subscribeMessage));
+      logger.info(`[Proxy] Sent subscription request for ${symbolIds.length} symbols`);
+
+      // Notify client
+      this.sendToClient(clientId, {
+        type: 'authenticated',
+        message: 'Successfully connected to Questrade'
+      });
+
+      return;
+    }
+
+    // Error response
+    if (data.error) {
+      logger.error(`[Proxy] Questrade error:`, data.error);
+      this.sendToClient(clientId, {
+        type: 'error',
+        error: data.error
+      });
+      return;
+    }
+
+    // Quote update
+    if (data.symbolId !== undefined) {
+      logger.debug(`[Proxy] Quote update: symbolId=${data.symbolId}, price=${data.lastTradePrice}`);
+
+      // Forward quote to client
+      this.sendToClient(clientId, {
+        type: 'quote',
+        data: data
+      });
+    }
+  }
+
+  /**
+   * Disconnect from Questrade WebSocket
+   */
+  disconnectFromQuestrade(clientId) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    if (client.questradeWs) {
+      logger.info(`[Proxy] Disconnecting client ${clientId} from Questrade`);
+      client.questradeWs.close(1000, 'Client requested disconnect');
+      client.questradeWs = null;
+      client.isAuthenticated = false;
+    }
+  }
+
+  /**
+   * Disconnect client completely
+   */
+  disconnectClient(clientId) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    // Close Questrade connection
+    this.disconnectFromQuestrade(clientId);
+
+    // Remove client
+    this.clients.delete(clientId);
+    logger.info(`[Proxy] Client ${clientId} removed`);
+  }
+
+  /**
+   * Send message to browser client
+   */
+  sendToClient(clientId, message) {
+    const client = this.clients.get(clientId);
+    if (!client || !client.ws) return;
+
+    if (client.ws.readyState === WebSocket.OPEN) {
+      client.ws.send(JSON.stringify(message));
+    }
+  }
+
+  /**
+   * Generate unique client ID
+   */
+  generateClientId() {
+    return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Get proxy statistics
+   */
+  getStats() {
+    return {
+      totalClients: this.clients.size,
+      authenticatedClients: Array.from(this.clients.values()).filter(c => c.isAuthenticated).length,
+      clients: Array.from(this.clients.entries()).map(([id, client]) => ({
+        id,
+        authenticated: client.isAuthenticated,
+        symbolCount: client.symbolIds.length,
+        personName: client.personName
+      }))
+    };
+  }
+}
+
+// Export singleton instance
+module.exports = new QuestradeWebSocketProxy();
+
+
+FILE 2: server.js (WebSocket Server Setup)
+------------------------------------------
+// src/server.js - WebSocket Proxy Server
+require('dotenv').config();
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const cors = require('cors');
+const helmet = require('helmet');
+const logger = require('./utils/logger');
+const questradeWebSocketProxy = require('./services/questradeWebSocketProxy');
+
+const app = express();
+const server = http.createServer(app);
+
+// Middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    service: 'questrade-websocket-proxy',
+    status: 'healthy',
+    uptime: process.uptime(),
+    stats: questradeWebSocketProxy.getStats()
+  });
+});
+
+// Stats endpoint
+app.get('/api/stats', (req, res) => {
+  res.json({
+    success: true,
+    data: questradeWebSocketProxy.getStats()
+  });
+});
+
+// Create WebSocket server
+const wss = new WebSocket.Server({
+  server,
+  path: '/ws/quotes'
+});
+
+// Handle WebSocket connections
+wss.on('connection', (ws, request) => {
+  const clientIp = request.socket.remoteAddress;
+  logger.info(`[Server] New WebSocket connection from ${clientIp}`);
+
+  // Pass connection to proxy service
+  questradeWebSocketProxy.handleClientConnection(ws, request);
+});
+
+// Handle WebSocket server errors
+wss.on('error', (error) => {
+  logger.error('[Server] WebSocket server error:', error);
+});
+
+// Start server
+const PORT = process.env.PORT || 4005;
+server.listen(PORT, () => {
+  logger.info(`🚀 Questrade WebSocket Proxy running on port ${PORT}`);
+  logger.info(`   WebSocket endpoint: ws://localhost:${PORT}/ws/quotes`);
+  logger.info(`   Health check: http://localhost:${PORT}/health`);
+  logger.info(`   Stats: http://localhost:${PORT}/api/stats`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, closing server...');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, closing server...');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+});
+
+
+PACKAGE DEPENDENCIES:
+====================
+{
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "ws": "^8.18.0",
+    "winston": "^3.17.0"
+  }
+}
