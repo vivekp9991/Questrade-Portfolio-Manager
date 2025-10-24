@@ -1,0 +1,589 @@
+/* src/styles/stats-grid.css - UPDATED FOR MISSING ICON HANDLING */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+    position: relative;
+}
+
+/* Responsive grid adjustments for 6 cards */
+@media (min-width: 1400px) {
+    .stats-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        min-height: 140px;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* Exchange Rate Indicator */
+.exchange-rate-indicator {
+    position: absolute;
+    top: -2rem;
+    right: 1rem;
+    background: linear-gradient(135deg, var(--primary-50) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border: 1px solid var(--primary-200);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    z-index: 10;
+}
+
+.rate-label {
+    color: var(--primary-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.rate-value {
+    font-weight: 700;
+    color: var(--primary-800);
+    font-size: 0.875rem;
+}
+
+.rate-note {
+    color: var(--primary-500);
+    font-style: italic;
+    font-size: 0.7rem;
+}
+
+/* Enhanced Stat Cards */
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--neutral-200);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+}
+
+.stat-card.aggregated::before {
+    background: linear-gradient(90deg, var(--primary-500), var(--purple-500), var(--success-500));
+}
+
+/* Cash Balance Card Specific Styling */
+.stat-card.cash-balance-card::before {
+    background: linear-gradient(90deg, #06b6d4, #0891b2);
+}
+
+.stat-card.cash-balance-card {
+    border-color: rgba(6, 182, 212, 0.2);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.02) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.stat-card.cash-balance-card:hover {
+    border-color: rgba(6, 182, 212, 0.3);
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.stat-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+}
+
+/* FIXED: Icon handling - only show if icon exists */
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+    color: white;
+    flex-shrink: 0;
+}
+
+/* FIXED: Hide icon container if no icon */
+.stat-info:has(.stat-icon:empty) .stat-icon,
+.stat-info .stat-icon:empty {
+    display: none;
+}
+
+/* FIXED: Adjust layout when no icon is present */
+.stat-info:has(.stat-icon:empty) {
+    gap: 0;
+}
+
+.stat-title-section {
+    flex: 1;
+}
+
+.stat-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--neutral-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.stat-context {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.context-indicator {
+    font-size: 0.7rem;
+}
+
+.context-label {
+    font-size: 0.65rem;
+    color: var(--primary-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trend-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.trend-indicator.positive {
+    background: var(--success-100);
+    color: var(--success-600);
+}
+
+.trend-indicator.negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-600);
+}
+
+.stat-tooltip {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-100);
+    color: var(--primary-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: help;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--neutral-900);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+}
+
+.stat-value.positive {
+    color: var(--success-600);
+}
+
+.stat-value.negative {
+    color: var(--error-600);
+}
+
+.stat-subtitle {
+    font-size: 0.8rem;
+    color: var(--neutral-500);
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: auto;
+}
+
+.stat-subtitle.positive {
+    color: var(--success-600);
+}
+
+.stat-subtitle.negative {
+    color: var(--error-600);
+}
+
+/* Cash Balance Breakdown */
+.cash-balance-breakdown {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(6, 182, 212, 0.05);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: 8px;
+    font-size: 0.75rem;
+}
+
+.breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.breakdown-title {
+    font-weight: 600;
+    color: var(--neutral-700);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.account-count {
+    color: var(--neutral-500);
+    font-size: 0.65rem;
+    font-style: italic;
+}
+
+.breakdown-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.account-type {
+    font-weight: 600;
+    color: var(--neutral-700);
+    font-size: 0.7rem;
+}
+
+.account-value {
+    font-weight: 500;
+    color: var(--neutral-600);
+    font-size: 0.7rem;
+}
+
+.breakdown-more {
+    text-align: center;
+    color: var(--neutral-500);
+    font-style: italic;
+    font-size: 0.65rem;
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba(6, 182, 212, 0.1);
+}
+
+/* Percent badge */
+.stat-percent-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 1px solid var(--neutral-200);
+}
+
+.stat-percent-badge .positive {
+    color: var(--success-600);
+}
+
+.stat-percent-badge .negative {
+    color: var(--error-600);
+}
+
+/* Sparkline visualization */
+.sparkline {
+    width: 60px;
+    height: 20px;
+    background: linear-gradient(90deg, var(--success-500) 0%, var(--primary-500) 100%);
+    border-radius: 10px;
+    opacity: 0.3;
+}
+
+/* Progress indicators */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--neutral-200);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-500), var(--primary-500));
+    border-radius: 2px;
+    transition: width 1s ease;
+    animation: shimmer 2s infinite;
+}
+
+/* Stat overlay */
+.stat-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(59, 130, 246, 0.95);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.stat-card.cash-balance-card .stat-overlay {
+    background: rgba(6, 182, 212, 0.95);
+}
+
+.stat-card:hover .stat-overlay {
+    opacity: 1;
+}
+
+.overlay-content {
+    text-align: center;
+}
+
+.overlay-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.overlay-text {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    white-space: pre-line;
+    line-height: 1.4;
+}
+
+.overlay-rate {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Stat details */
+.stat-details {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: var(--neutral-50);
+    border-radius: 6px;
+    border: 1px solid var(--neutral-200);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: var(--neutral-600);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--neutral-800);
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    
+    .exchange-rate-indicator {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        min-height: 140px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .cash-balance-breakdown {
+        margin-top: 0.75rem;
+        padding: 0.5rem;
+    }
+    
+    .breakdown-items {
+        gap: 0.125rem;
+    }
+    
+    .breakdown-item {
+        padding: 0.125rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        padding: 0.875rem;
+        min-height: 120px;
+    }
+    
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-title {
+        font-size: 0.65rem;
+    }
+    
+    .stat-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .cash-balance-breakdown {
+        font-size: 0.7rem;
+    }
+    
+    .breakdown-title {
+        font-size: 0.65rem;
+    }
+    
+    .account-count {
+        font-size: 0.6rem;
+    }
+    
+    .account-type,
+    .account-value {
+        font-size: 0.65rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes shimmer {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+/* Focus and accessibility */
+.stat-card:focus-within {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .stat-overlay {
+        display: none !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        break-inside: avoid;
+    }
+    
+    .stat-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

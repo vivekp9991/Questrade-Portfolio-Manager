@@ -1,0 +1,79 @@
+/* src/styles/header.css - SIMPLIFIED HEADER STYLES */
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--neutral-200);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 20px;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.title-section h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+
+.title-section p {
+    font-size: 0.875rem;
+    color: var(--neutral-500);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .logo-section {
+        gap: 8px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .title-section h1 {
+        font-size: 1.5rem;
+    }
+
+    .title-section p {
+        font-size: 0.75rem;
+    }
+}

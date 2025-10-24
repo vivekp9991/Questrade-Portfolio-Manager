@@ -1,0 +1,513 @@
+/* src/styles/table.css - UPDATED FOR NEW COLUMN STRUCTURE */
+.table-container {
+    padding: 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    position: relative;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    position: relative;
+    /* Enable smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+}
+
+.modern-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: rgba(255, 255, 255, 0.9);
+    overflow: visible;  /* Changed from hidden to visible for sticky columns */
+    table-layout: auto;
+    position: relative;  /* Required for sticky positioning */
+}
+
+.modern-table th {
+    padding: 1rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--neutral-700);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--neutral-100) 0%, var(--neutral-50) 100%);
+    border-bottom: 2px solid var(--neutral-200);
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-width: 100px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Sticky column for STOCK column */
+.modern-table th.sticky-column {
+    min-width: 180px;
+    position: sticky !important;
+    left: 0;
+    z-index: 20 !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table th.sticky-column:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%) !important;
+}
+
+.modern-table td.sticky-column {
+    min-width: 180px;
+    position: sticky !important;
+    left: 0;
+    z-index: 10 !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    white-space: normal;
+}
+
+/* Fallback for browsers that don't use .sticky-column class */
+.modern-table th:first-child {
+    min-width: 180px;
+    position: sticky;
+    left: 0;
+    z-index: 20;
+    background: linear-gradient(135deg, var(--neutral-100) 0%, var(--neutral-200) 100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table th:hover {
+    background: linear-gradient(135deg, var(--neutral-200) 0%, var(--neutral-100) 100%);
+}
+
+.modern-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--neutral-200);
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    min-width: 100px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.modern-table td:first-child {
+    min-width: 180px;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    white-space: normal;
+}
+
+.modern-table tbody tr {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.modern-table tbody tr:hover td {
+    background: var(--primary-50);
+}
+
+/* Stock information styling */
+.stock-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    width: 100%;
+}
+
+.stock-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.stock-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.stock-name {
+    font-weight: 600;
+    color: var(--neutral-900);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stock-company {
+    font-size: 0.7rem;
+    color: var(--neutral-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+    transition: all 0.2s ease;
+    cursor: help;
+}
+
+/* Show full company name on hover */
+.stock-company:hover {
+    overflow: visible;
+    white-space: normal;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 100;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 6px 8px;
+    border-radius: 6px;
+    max-width: none;
+    color: var(--neutral-700);
+    font-weight: 500;
+}
+
+.aggregated-badge {
+    background: var(--purple-500);
+    color: white;
+    padding: 0.1rem 0.3rem;
+    border-radius: 6px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Today change and return styling */
+.today-change,
+.today-return {
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.today-change.positive,
+.today-return.positive {
+    background: linear-gradient(135deg, var(--success-50) 0%, var(--success-100) 100%);
+    color: var(--success-700);
+    border: 1px solid var(--success-200);
+}
+
+.today-change.negative,
+.today-return.negative {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.12) 100%);
+    color: var(--error-700);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.today-change.neutral,
+.today-return.neutral {
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    border: 1px solid var(--neutral-300);
+}
+
+/* Live update animation */
+.live-update {
+    position: relative;
+}
+
+.live-update.updated {
+    animation: liveUpdatePulse 1.5s ease-out;
+}
+
+@keyframes liveUpdatePulse {
+    0% {
+        background: rgba(34, 197, 94, 0.1);
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+/* Price update styling */
+.price-update {
+    transition: all 0.4s ease;
+    font-weight: 600;
+    position: relative;
+}
+
+.price-update.updated {
+    animation: priceFlash 1s ease-out;
+}
+
+@keyframes priceFlash {
+    0% { 
+        background-color: transparent; 
+    }
+    20% { 
+        background-color: rgba(59, 130, 246, 0.2); 
+        transform: scale(1.05);
+    }
+    100% { 
+        background-color: transparent; 
+        transform: scale(1);
+    }
+}
+
+.update-indicator {
+    font-size: 0.5rem;
+    color: var(--success-500);
+    margin-left: 0.25rem;
+    animation: pulse 2s infinite;
+}
+
+/* Yield badge styling */
+.yield-badge {
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+    color: var(--primary-700);
+    padding: 0.2rem 0.4rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    border: 1px solid var(--primary-200);
+    display: inline-block;
+}
+
+/* Excluded from YoC calculation - show in red */
+.yield-badge.excluded-yoc {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* YoC toggle checkbox styling */
+.yoc-toggle-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.yoc-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-500);
+}
+
+.yoc-checkbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Dividend adjusted columns */
+.dividend-adjusted {
+    background: rgba(139, 92, 246, 0.05);
+    font-weight: 600;
+    color: var(--purple-700);
+}
+
+/* Source accounts styling */
+.source-accounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 150px;
+}
+
+.account-tag {
+    background: var(--neutral-100);
+    color: var(--neutral-700);
+    padding: 0.15rem 0.3rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.more-accounts {
+    color: var(--neutral-500);
+    font-size: 0.65rem;
+    font-style: italic;
+}
+
+/* Action buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+}
+
+.action-btn {
+    background: white;
+    border: 1px solid var(--neutral-300);
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.action-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-300);
+    transform: translateY(-1px);
+}
+
+.action-btn.select-btn {
+    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+    color: white;
+    border: none;
+}
+
+.action-btn.select-btn:hover {
+    background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Aggregated row styling */
+.aggregated-row {
+    background: rgba(139, 92, 246, 0.02);
+    border-left: 2px solid var(--purple-500);
+}
+
+.aggregated-row:hover {
+    background: rgba(139, 92, 246, 0.06);
+}
+
+/* Sort indicator */
+.sort-indicator {
+    color: var(--neutral-400);
+    font-size: 0.65rem;
+    margin-left: 0.25rem;
+}
+
+/* Color utilities */
+.positive {
+    color: var(--success-600) !important;
+}
+
+.negative {
+    color: var(--error-600) !important;
+}
+
+/* Market status */
+.market-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-weight: 600;
+    border: 1px solid;
+}
+
+.market-status.open {
+    background: var(--success-50);
+    color: var(--success-700);
+    border-color: var(--success-200);
+}
+
+.market-status.closed {
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    border-color: var(--neutral-200);
+}
+
+.market-status.pre-market {
+    background: var(--warning-50);
+    color: var(--warning-700);
+    border-color: var(--warning-200);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.market-status.open .status-dot {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .modern-table th,
+    .modern-table td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.7rem;
+        min-width: 90px;
+    }
+    
+    .modern-table th:first-child,
+    .modern-table td:first-child {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-table th,
+    .modern-table td {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.65rem;
+        min-width: 80px;
+    }
+    
+    .modern-table th:first-child,
+    .modern-table td:first-child {
+        min-width: 140px;
+    }
+    
+    .stock-name {
+        font-size: 0.75rem;
+    }
+
+    .stock-company {
+        font-size: 0.65rem;
+        max-width: 120px;
+    }
+
+    /* Maintain hover effect on mobile */
+    .stock-company:hover {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-table {
+        font-size: 0.6rem;
+    }
+    
+    .modern-table th,
+    .modern-table td {
+        padding: 0.3rem 0.2rem;
+        min-width: 70px;
+    }
+    
+    .modern-table th:first-child,
+    .modern-table td:first-child {
+        min-width: 120px;
+    }
+}

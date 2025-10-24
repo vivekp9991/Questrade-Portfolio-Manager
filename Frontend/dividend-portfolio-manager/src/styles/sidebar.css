@@ -1,0 +1,120 @@
+/* src/styles/sidebar.css */
+.sidebar {
+    transition: width 0.3s ease;
+    width: 260px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    height: fit-content;
+}
+
+.sidebar.collapsed {
+    width: 80px;
+    padding: 1rem;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 28px;
+    height: 28px;
+    background: var(--primary-500);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary-600);
+    transform: scale(1.1);
+}
+
+.nav-items-container {
+    margin-top: 2rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    color: var(--neutral-600);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: var(--primary-500);
+    border-radius: 2px;
+    transition: height 0.3s ease;
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, var(--primary-50) 0%, rgba(59, 130, 246, 0.1) 100%);
+    color: var(--primary-700);
+    border: 1px solid var(--primary-200);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+}
+
+.nav-item.active::before {
+    height: 60%;
+}
+
+.nav-item:hover:not(.active) {
+    background: var(--neutral-50);
+    transform: translateX(4px);
+}
+
+.nav-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.nav-label {
+    font-weight: 600;
+}
+
+.sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+}
+
+.sidebar.collapsed .nav-label {
+    display: none;
+}
+
+.sidebar.collapsed .nav-icon {
+    margin: 0;
+}

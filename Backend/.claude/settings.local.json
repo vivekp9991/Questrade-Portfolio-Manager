@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mongosh:*)",
+      "Bash(cp:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(node -e \"const data = require(''''fs'''').readFileSync(0, ''''utf-8''''); const json = JSON.parse(data); console.log(JSON.stringify(json, null, 2))\")",
+      "Bash(node:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm restart)",
+      "Bash(npm start)",
+      "Bash(npm run sync:dividends:*)",
+      "Read(//d/Project/3/**)",
+      "Bash(git clone:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(code:*)",
+      "Read(//d/Project/**)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

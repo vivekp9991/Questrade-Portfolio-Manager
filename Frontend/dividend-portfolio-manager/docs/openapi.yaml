@@ -1,0 +1,2220 @@
+openapi: 3.0.3
+info:
+  title: Questrade Portfolio Tracker API
+  description: |
+    A comprehensive Node.js application for tracking your Questrade portfolio with automatic token refresh, 
+    real-time data sync, and detailed dividend tracking.
+    
+    ## Features
+    - 🔐 Automatic token refresh (weekly)
+    - 📊 Real-time portfolio data sync
+    - 💰 Detailed dividend tracking and analysis
+    - 📈 Portfolio performance metrics
+    - 🎯 Snap quote integration for current prices
+    - 📅 Historical snapshots
+    - 🔄 Automatic data synchronization during market hours
+    
+    ## Multi-Person Support
+    This API supports multiple persons/users, each with their own Questrade account(s) and tokens.
+    
+    ## Authentication
+    Each person requires a valid Questrade refresh token. The system automatically manages access tokens.
+    
+  version: "2.0.1"
+  contact:
+    name: Portfolio Manager Support
+    url: https://github.com/yourusername/portfolio-manager
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development server
+  - url: https://your-production-domain.com/api
+    description: Production server
+
+tags:
+  - name: Authentication & Tokens
+    description: Token management and authentication operations
+  - name: Person Management
+    description: Multi-person account management
+  - name: Accounts
+    description: Questrade account operations
+  - name: Portfolio
+    description: Portfolio data and analytics
+  - name: Market Data
+    description: Real-time market quotes and data
+  - name: Data Synchronization
+    description: Data sync operations and status
+  - name: Settings & Admin
+    description: System settings and administration
+  - name: Health & Monitoring
+    description: System health and monitoring endpoints
+
+paths:
+  # Authentication & Token Management
+  /auth/setup-person:
+    post:
+      tags: ["Authentication & Tokens"]
+      summary: Setup authentication for a new person
+      description: Initialize a person with their Questrade refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personName, refreshToken]
+              properties:
+                personName:
+                  type: string
+                  example: "John Doe"
+                refreshToken:
+                  type: string
+                  example: "sBPZVcmNB6udi8zcwT8uqIgm2jAkFdvI0"
+      responses:
+        '201':
+          description: Person setup successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh-token/{personName}:
+    put:
+      tags: ["Authentication & Tokens"]
+      summary: Refresh access token for person
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          expiresIn:
+                            type: integer
+                            example: 1800
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/token-status/{personName}:
+    get:
+      tags: ["Authentication & Tokens"]
+      summary: Get token status for person
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      responses:
+        '200':
+          description: Token status retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TokenStatus'
+
+  /auth/token-status:
+    get:
+      tags: ["Authentication & Tokens"]
+      summary: Get token status for all persons
+      responses:
+        '200':
+          description: Token status for all persons
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TokenStatus'
+
+  /auth/test-connection/{personName}:
+    post:
+      tags: ["Authentication & Tokens"]
+      summary: Test API connection for person
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      responses:
+        '200':
+          description: Connection test successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          serverTime:
+                            type: string
+                            format: date-time
+                          responseTime:
+                            type: integer
+
+  # Person Management
+  /persons:
+    get:
+      tags: ["Person Management"]
+      summary: Get all persons
+      responses:
+        '200':
+          description: List of all persons
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Person'
+
+    post:
+      tags: ["Person Management"]
+      summary: Create new person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personName, refreshToken]
+              properties:
+                personName:
+                  type: string
+                  example: "Jane Smith"
+                refreshToken:
+                  type: string
+                  example: "sBPZVcmNB6udi8zcwT8uqIgm2jAkFdvI0"
+                displayName:
+                  type: string
+                  example: "Jane S."
+                email:
+                  type: string
+                  format: email
+                  example: "jane@example.com"
+                phoneNumber:
+                  type: string
+                  example: "+1-555-0123"
+      responses:
+        '201':
+          description: Person created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Person'
+
+  /persons/{personName}:
+    get:
+      tags: ["Person Management"]
+      summary: Get specific person details
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      responses:
+        '200':
+          description: Person details retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonDetails'
+
+    put:
+      tags: ["Person Management"]
+      summary: Update person information
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPersonName:
+                  type: string
+                displayName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                preferences:
+                  $ref: '#/components/schemas/PersonPreferences'
+      responses:
+        '200':
+          description: Person updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Person'
+
+    delete:
+      tags: ["Person Management"]
+      summary: Delete person (soft delete)
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+        - name: permanent
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Whether to permanently delete all data
+      responses:
+        '200':
+          description: Person deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Accounts
+  /accounts:
+    get:
+      tags: ["Accounts"]
+      summary: Get all accounts
+      parameters:
+        - name: personName
+          in: query
+          schema:
+            type: string
+          description: Filter accounts by person name
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Account'
+
+  /accounts/by-person:
+    get:
+      tags: ["Accounts"]
+      summary: Get accounts grouped by person
+      responses:
+        '200':
+          description: Accounts grouped by person
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        additionalProperties:
+                          $ref: '#/components/schemas/PersonAccountGroup'
+
+  /accounts/dropdown-options:
+    get:
+      tags: ["Accounts"]
+      summary: Get account dropdown options for UI
+      responses:
+        '200':
+          description: Account dropdown options
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AccountOption'
+
+  # Portfolio
+  /portfolio/summary:
+    get:
+      tags: ["Portfolio"]
+      summary: Get portfolio summary
+      parameters:
+        - $ref: '#/components/parameters/ViewMode'
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - $ref: '#/components/parameters/AccountId'
+        - name: aggregate
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Whether to aggregate positions
+      responses:
+        '200':
+          description: Portfolio summary
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PortfolioSummary'
+
+  /portfolio/positions:
+    get:
+      tags: ["Portfolio"]
+      summary: Get portfolio positions
+      parameters:
+        - $ref: '#/components/parameters/ViewMode'
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - $ref: '#/components/parameters/AccountId'
+        - name: aggregate
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Whether to aggregate positions
+      responses:
+        '200':
+          description: Portfolio positions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Position'
+                      meta:
+                        $ref: '#/components/schemas/PositionsMeta'
+
+  /portfolio/positions/{symbol}:
+    get:
+      tags: ["Portfolio"]
+      summary: Get position details by symbol
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "AAPL"
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Position details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Position'
+
+  /portfolio/cash-balances:
+    get:
+      tags: ["Portfolio"]
+      summary: Get cash balances
+      parameters:
+        - $ref: '#/components/parameters/ViewMode'
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - $ref: '#/components/parameters/AccountId'
+        - name: currency
+          in: query
+          schema:
+            type: string
+            enum: [CAD, USD]
+          description: Filter by currency
+      responses:
+        '200':
+          description: Cash balances
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CashBalanceData'
+
+  /portfolio/cash-balances/refresh:
+    post:
+      tags: ["Portfolio"]
+      summary: Force refresh cash balances
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personName]
+              properties:
+                personName:
+                  type: string
+                accountId:
+                  type: string
+      responses:
+        '200':
+          description: Balance refresh completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /portfolio/dividends/calendar:
+    get:
+      tags: ["Portfolio"]
+      summary: Get dividend calendar
+      parameters:
+        - $ref: '#/components/parameters/ViewMode'
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - $ref: '#/components/parameters/AccountId'
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          example: "2024-12-31"
+      responses:
+        '200':
+          description: Dividend calendar
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DividendActivity'
+                      meta:
+                        $ref: '#/components/schemas/DividendMeta'
+
+  /portfolio/snapshots:
+    get:
+      tags: ["Portfolio"]
+      summary: Get portfolio snapshots
+      parameters:
+        - $ref: '#/components/parameters/ViewMode'
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - $ref: '#/components/parameters/AccountId'
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Portfolio snapshots
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PortfolioSnapshot'
+
+  # Market Data
+  /market/quote/{symbols}:
+    get:
+      tags: ["Market Data"]
+      summary: Get market quotes (snap quotes)
+      parameters:
+        - name: symbols
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Comma-separated list of symbols
+          example: "AAPL,GOOGL,MSFT"
+        - $ref: '#/components/parameters/PersonNameQuery'
+      responses:
+        '200':
+          description: Market quotes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          quotes:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/MarketQuote'
+
+  /market/symbols/{symbols}:
+    get:
+      tags: ["Market Data"]
+      summary: Get symbol information
+      parameters:
+        - name: symbols
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Comma-separated list of symbols
+          example: "AAPL,GOOGL"
+        - $ref: '#/components/parameters/PersonNameQuery'
+      responses:
+        '200':
+          description: Symbol information
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Symbol'
+
+  /market/candles/{symbol}:
+    get:
+      tags: ["Market Data"]
+      summary: Get historical price data (candles)
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "AAPL"
+        - name: startTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00-05:00"
+        - name: endTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-31T00:00:00-05:00"
+        - name: interval
+          in: query
+          schema:
+            type: string
+            enum: [OneMinute, FiveMinutes, TenMinutes, FifteenMinutes, TwentyMinutes, HalfHour, OneHour, TwoHours, FourHours, OneDay, OneWeek, OneMonth, OneYear]
+            default: OneDay
+        - $ref: '#/components/parameters/PersonNameQuery'
+      responses:
+        '200':
+          description: Historical price data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          candles:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Candle'
+
+  # Data Synchronization
+  /sync/person/{personName}:
+    post:
+      tags: ["Data Synchronization"]
+      summary: Sync data for specific person
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullSync:
+                  type: boolean
+                  default: false
+                  description: Whether to perform full sync (6 months of data)
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SyncResult'
+
+  /sync/all-persons:
+    post:
+      tags: ["Data Synchronization"]
+      summary: Sync data for all persons
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullSync:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Sync completed for all persons
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SyncResult'
+
+  /sync/status:
+    get:
+      tags: ["Data Synchronization"]
+      summary: Get sync status for all persons
+      responses:
+        '200':
+          description: Sync status for all persons
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SyncStatus'
+
+  /sync/status/{personName}:
+    get:
+      tags: ["Data Synchronization"]
+      summary: Get sync status for specific person
+      parameters:
+        - $ref: '#/components/parameters/PersonName'
+      responses:
+        '200':
+          description: Sync status for person
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SyncStatus'
+
+  # Settings & Administration
+  /settings/dashboard:
+    get:
+      tags: ["Settings & Admin"]
+      summary: Get comprehensive settings dashboard data
+      responses:
+        '200':
+          description: Settings dashboard data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SettingsDashboard'
+
+  /settings/validate-token:
+    post:
+      tags: ["Settings & Admin"]
+      summary: Validate refresh token without saving
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token validation result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TokenValidation'
+
+  /settings/error-logs:
+    get:
+      tags: ["Settings & Admin"]
+      summary: Get error logs for troubleshooting
+      parameters:
+        - $ref: '#/components/parameters/PersonNameQuery'
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+          description: Number of days to look back
+      responses:
+        '200':
+          description: Error logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ErrorLogs'
+
+  # Health & Monitoring
+  /health/system:
+    get:
+      tags: ["Health & Monitoring"]
+      summary: Overall system health summary
+      responses:
+        '200':
+          description: System health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SystemHealth'
+
+  /health/tokens:
+    get:
+      tags: ["Health & Monitoring"]
+      summary: Health check for all tokens
+      responses:
+        '200':
+          description: Token health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TokenHealth'
+
+  /health/connections:
+    get:
+      tags: ["Health & Monitoring"]
+      summary: Test Questrade API connections for all persons
+      responses:
+        '200':
+          description: Connection test results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConnectionHealth'
+
+  /health/database:
+    get:
+      tags: ["Health & Monitoring"]
+      summary: Database health and statistics
+      responses:
+        '200':
+          description: Database health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DatabaseHealth'
+
+# Components
+components:
+  parameters:
+    PersonName:
+      name: personName
+      in: path
+      required: true
+      schema:
+        type: string
+      example: "John Doe"
+
+    PersonNameQuery:
+      name: personName
+      in: query
+      schema:
+        type: string
+      example: "John Doe"
+
+    AccountId:
+      name: accountId
+      in: query
+      schema:
+        type: string
+      example: "53413547"
+
+    ViewMode:
+      name: viewMode
+      in: query
+      schema:
+        type: string
+        enum: [all, person, account]
+        default: all
+      description: View mode for filtering data
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - invalid or expired token
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  errorCode:
+                    type: string
+                    example: "TOKEN_EXPIRED"
+                  userMessage:
+                    type: string
+                    example: "Your access token has expired. The system will automatically refresh it on the next request."
+                  recoverySuggestions:
+                    type: array
+                    items:
+                      type: string
+                    example: ["The system will automatically refresh your token", "If this persists, check your refresh token in Settings"]
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Error message"
+        timestamp:
+          type: string
+          format: date-time
+
+    TokenStatus:
+      type: object
+      properties:
+        personName:
+          type: string
+        refreshToken:
+          type: object
+          properties:
+            exists:
+              type: boolean
+            expiresAt:
+              type: string
+              format: date-time
+            lastUsed:
+              type: string
+              format: date-time
+            errorCount:
+              type: integer
+            lastError:
+              type: string
+        accessToken:
+          type: object
+          properties:
+            exists:
+              type: boolean
+            expiresAt:
+              type: string
+              format: date-time
+            apiServer:
+              type: string
+        isHealthy:
+          type: boolean
+
+    Person:
+      type: object
+      properties:
+        personName:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        isActive:
+          type: boolean
+        hasValidToken:
+          type: boolean
+        lastTokenRefresh:
+          type: string
+          format: date-time
+        lastSuccessfulSync:
+          type: string
+          format: date-time
+        preferences:
+          $ref: '#/components/schemas/PersonPreferences'
+        createdAt:
+          type: string
+          format: date-time
+
+    PersonDetails:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+        - type: object
+          properties:
+            accounts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Account'
+            tokenStatus:
+              $ref: '#/components/schemas/TokenStatus'
+            statistics:
+              type: object
+              properties:
+                positionCount:
+                  type: integer
+                activityCount:
+                  type: integer
+                accountCount:
+                  type: integer
+
+    PersonPreferences:
+      type: object
+      properties:
+        defaultView:
+          type: string
+          enum: [all, person, account]
+        currency:
+          type: string
+          enum: [CAD, USD]
+        notifications:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            dividendAlerts:
+              type: boolean
+            syncErrors:
+              type: boolean
+
+    Account:
+      type: object
+      properties:
+        accountId:
+          type: string
+        personName:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        isPrimary:
+          type: boolean
+        balances:
+          $ref: '#/components/schemas/AccountBalances'
+        numberOfPositions:
+          type: integer
+        totalInvestment:
+          type: number
+        currentValue:
+          type: number
+        dayPnl:
+          type: number
+        openPnl:
+          type: number
+        closedPnl:
+          type: number
+        totalPnl:
+          type: number
+        syncedAt:
+          type: string
+          format: date-time
+
+    AccountBalances:
+      type: object
+      properties:
+        perCurrencyBalances:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyBalance'
+        combinedBalances:
+          $ref: '#/components/schemas/CurrencyBalance'
+        lastUpdated:
+          type: string
+          format: date-time
+
+    CurrencyBalance:
+      type: object
+      properties:
+        currency:
+          type: string
+        cash:
+          type: number
+        marketValue:
+          type: number
+        totalEquity:
+          type: number
+        buyingPower:
+          type: number
+        maintenanceExcess:
+          type: number
+        isRealTime:
+          type: boolean
+
+    PersonAccountGroup:
+      type: object
+      properties:
+        person:
+          type: object
+          properties:
+            personName:
+              type: string
+            displayName:
+              type: string
+            hasValidToken:
+              type: boolean
+            lastSuccessfulSync:
+              type: string
+              format: date-time
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+
+    AccountOption:
+      type: object
+      properties:
+        value:
+          type: string
+          example: "account-53413547"
+        label:
+          type: string
+          example: "John Doe TFSA - 53413547"
+        type:
+          type: string
+          enum: [all, person, account]
+        personName:
+          type: string
+        accountId:
+          type: string
+
+    PortfolioSummary:
+      type: object
+      properties:
+        viewMode:
+          type: string
+          enum: [all, person, account]
+        personName:
+          type: string
+        accountId:
+          type: string
+        currency:
+          type: string
+        totalInvestment:
+          type: number
+          example: 75000.00
+        currentValue:
+          type: number
+          example: 82500.00
+        totalReturnValue:
+          type: number
+          example: 8500.00
+        totalReturnPercent:
+          type: number
+          example: 11.33
+        unrealizedPnl:
+          type: number
+          example: 7500.00
+        totalDividends:
+          type: number
+          example: 1000.00
+        monthlyDividendIncome:
+          type: number
+          example: 125.50
+        annualProjectedDividend:
+          type: number
+          example: 1506.00
+        averageYieldPercent:
+          type: number
+          example: 1.83
+        yieldOnCostPercent:
+          type: number
+          example: 2.01
+        numberOfPositions:
+          type: integer
+          example: 15
+        numberOfAccounts:
+          type: integer
+          example: 3
+        numberOfDividendStocks:
+          type: integer
+          example: 8
+        sectorAllocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationItem'
+        currencyBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyAllocation'
+        personBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonAllocation'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountSummary'
+        aggregationInfo:
+          type: object
+          properties:
+            hasAggregatedPositions:
+              type: boolean
+            totalAggregatedSymbols:
+              type: integer
+
+    Position:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: "AAPL"
+        symbolId:
+          type: integer
+          example: 8049
+        personName:
+          type: string
+        accountId:
+          type: string
+        openQuantity:
+          type: number
+          example: 100
+        currentMarketValue:
+          type: number
+          example: 15000.00
+        currentPrice:
+          type: number
+          example: 150.00
+        averageEntryPrice:
+          type: number
+          example: 140.00
+        totalCost:
+          type: number
+          example: 14000.00
+        dayPnl:
+          type: number
+          example: 50.00
+        openPnl:
+          type: number
+          example: 1000.00
+        totalReturnPercent:
+          type: number
+          example: 7.14
+        totalReturnValue:
+          type: number
+          example: 1000.00
+        dividendPerShare:
+          type: number
+          example: 0.24
+        dividendData:
+          $ref: '#/components/schemas/DividendData'
+        industrySector:
+          type: string
+          example: "Technology"
+        currency:
+          type: string
+          example: "USD"
+        isDividendStock:
+          type: boolean
+        isAggregated:
+          type: boolean
+        numberOfAccounts:
+          type: integer
+        individualPositions:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndividualPosition'
+        syncedAt:
+          type: string
+          format: date-time
+
+    DividendData:
+      type: object
+      properties:
+        totalReceived:
+          type: number
+          example: 250.00
+        lastDividendAmount:
+          type: number
+          example: 24.00
+        lastDividendDate:
+          type: string
+          format: date-time
+        dividendReturnPercent:
+          type: number
+          example: 1.79
+        yieldOnCost:
+          type: number
+          example: 6.86
+        dividendAdjustedCost:
+          type: number
+          example: 13750.00
+        dividendAdjustedCostPerShare:
+          type: number
+          example: 137.50
+        monthlyDividend:
+          type: number
+          example: 8.00
+        monthlyDividendPerShare:
+          type: number
+          example: 0.08
+        annualDividend:
+          type: number
+          example: 96.00
+        annualDividendPerShare:
+          type: number
+          example: 0.96
+        dividendFrequency:
+          type: integer
+          example: 4
+
+    IndividualPosition:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accountName:
+          type: string
+        accountType:
+          type: string
+        shares:
+          type: number
+        avgCost:
+          type: number
+        marketValue:
+          type: number
+        totalCost:
+          type: number
+        openPnl:
+          type: number
+
+    PositionsMeta:
+      type: object
+      properties:
+        viewMode:
+          type: string
+        personName:
+          type: string
+        accountId:
+          type: string
+        aggregated:
+          type: boolean
+        count:
+          type: integer
+        currencySummary:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyAllocation'
+
+    CashBalanceData:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashBalanceAccount'
+        summary:
+          type: object
+          properties:
+            totalAccounts:
+              type: integer
+            totalPersons:
+              type: integer
+            totalCAD:
+              type: number
+            totalUSD:
+              type: number
+        currencyBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyTotal'
+        lastUpdated:
+          type: string
+          format: date-time
+        viewMode:
+          type: string
+        personName:
+          type: string
+        accountId:
+          type: string
+
+    CashBalanceAccount:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accountName:
+          type: string
+        accountType:
+          type: string
+        personName:
+          type: string
+        cashBalance:
+          type: number
+        currency:
+          type: string
+        cashBalances:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyBalance'
+        lastUpdated:
+          type: string
+          format: date-time
+        syncError:
+          type: string
+
+    CurrencyTotal:
+      type: object
+      properties:
+        currency:
+          type: string
+        total:
+          type: number
+        percentage:
+          type: number
+
+    DividendActivity:
+      type: object
+      properties:
+        accountId:
+          type: string
+        personName:
+          type: string
+        transactionDate:
+          type: string
+          format: date-time
+        symbol:
+          type: string
+        quantity:
+          type: number
+        netAmount:
+          type: number
+        currency:
+          type: string
+        dividendPerShare:
+          type: number
+        description:
+          type: string
+
+    DividendMeta:
+      type: object
+      properties:
+        viewMode:
+          type: string
+        personName:
+          type: string
+        accountId:
+          type: string
+        count:
+          type: integer
+        currencySummary:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyTotal'
+        monthlyBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                example: "2024-01"
+              currencies:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    currency:
+                      type: string
+                    amount:
+                      type: number
+                    count:
+                      type: integer
+
+    PortfolioSnapshot:
+      type: object
+      properties:
+        personName:
+          type: string
+        viewMode:
+          type: string
+        date:
+          type: string
+          format: date-time
+        totalInvestment:
+          type: number
+        currentValue:
+          type: number
+        totalReturnValue:
+          type: number
+        totalReturnPercent:
+          type: number
+        unrealizedPnl:
+          type: number
+        totalDividends:
+          type: number
+        monthlyDividendIncome:
+          type: number
+        annualProjectedDividend:
+          type: number
+        averageYieldPercent:
+          type: number
+        yieldOnCostPercent:
+          type: number
+        numberOfPositions:
+          type: integer
+        numberOfDividendStocks:
+          type: integer
+        numberOfAccounts:
+          type: integer
+        assetAllocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationItem'
+        sectorAllocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationItem'
+        currencyBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyAllocation'
+        personBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonAllocation'
+        createdAt:
+          type: string
+          format: date-time
+
+    MarketQuote:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: "AAPL"
+        symbolId:
+          type: integer
+          example: 8049
+        bidPrice:
+          type: number
+          example: 149.95
+        bidSize:
+          type: integer
+          example: 100
+        askPrice:
+          type: number
+          example: 150.05
+        askSize:
+          type: integer
+          example: 200
+        lastTradePrice:
+          type: number
+          example: 150.00
+        lastTradeSize:
+          type: integer
+          example: 100
+        lastTradeTick:
+          type: string
+          example: "Equal"
+        lastTradeTime:
+          type: string
+          format: date-time
+        volume:
+          type: integer
+          example: 1234567
+        openPrice:
+          type: number
+          example: 149.50
+        highPrice:
+          type: number
+          example: 151.00
+        lowPrice:
+          type: number
+          example: 148.75
+        delay:
+          type: integer
+          example: 0
+        isHalted:
+          type: boolean
+        VWAP:
+          type: number
+          example: 150.25
+        isSnapQuote:
+          type: boolean
+        snapQuoteTime:
+          type: string
+          format: date-time
+
+    Symbol:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: "AAPL"
+        symbolId:
+          type: integer
+          example: 8049
+        description:
+          type: string
+          example: "Apple Inc"
+        securityType:
+          type: string
+          example: "Stock"
+        listingExchange:
+          type: string
+          example: "NASDAQ"
+        currency:
+          type: string
+          example: "USD"
+        isTradable:
+          type: boolean
+        isQuotable:
+          type: boolean
+        prevDayClosePrice:
+          type: number
+        highPrice52:
+          type: number
+        lowPrice52:
+          type: number
+        dividend:
+          type: number
+        dividendPerShare:
+          type: number
+        yield:
+          type: number
+        exDate:
+          type: string
+          format: date-time
+        dividendDate:
+          type: string
+          format: date-time
+        dividendFrequency:
+          type: string
+        industrySector:
+          type: string
+        industryGroup:
+          type: string
+        industrySubGroup:
+          type: string
+        lastUpdated:
+          type: string
+          format: date-time
+
+    Candle:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        low:
+          type: number
+        high:
+          type: number
+        open:
+          type: number
+        close:
+          type: number
+        volume:
+          type: integer
+        VWAP:
+          type: number
+
+    SyncResult:
+      type: object
+      properties:
+        personName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in milliseconds
+        accounts:
+          type: object
+          properties:
+            synced:
+              type: integer
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncError'
+        positions:
+          type: object
+          properties:
+            synced:
+              type: integer
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncError'
+        activities:
+          type: object
+          properties:
+            synced:
+              type: integer
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncError'
+        snapshots:
+          type: object
+          properties:
+            created:
+              type: boolean
+            error:
+              type: string
+
+    SyncError:
+      type: object
+      properties:
+        accountId:
+          type: string
+        symbol:
+          type: string
+        type:
+          type: string
+        error:
+          type: string
+
+    SyncStatus:
+      type: object
+      properties:
+        personName:
+          type: string
+        lastSyncTime:
+          type: string
+          format: date-time
+        lastSyncStatus:
+          type: string
+          enum: [success, failed, in_progress, stopped]
+        lastSyncError:
+          type: string
+        lastSyncResults:
+          $ref: '#/components/schemas/SyncResult'
+        isInProgress:
+          type: boolean
+        counts:
+          type: object
+          properties:
+            accounts:
+              type: integer
+            positions:
+              type: integer
+            activities:
+              type: integer
+
+    SettingsDashboard:
+      type: object
+      properties:
+        persons:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Person'
+              - type: object
+                properties:
+                  tokenStatus:
+                    $ref: '#/components/schemas/TokenStatus'
+                  accountCount:
+                    type: integer
+        systemStats:
+          type: object
+          properties:
+            totalPersons:
+              type: integer
+            totalAccounts:
+              type: integer
+            totalPositions:
+              type: integer
+            totalActivities:
+              type: integer
+            activeTokens:
+              type: integer
+        recentErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              personName:
+                type: string
+              type:
+                type: string
+              lastError:
+                type: string
+              lastUsed:
+                type: string
+                format: date-time
+              errorCount:
+                type: integer
+
+    TokenValidation:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        error:
+          type: string
+        apiServer:
+          type: string
+        expiresIn:
+          type: integer
+
+    ErrorLogs:
+      type: object
+      properties:
+        tokenErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              personName:
+                type: string
+              type:
+                type: string
+              lastError:
+                type: string
+              lastUsed:
+                type: string
+                format: date-time
+              errorCount:
+                type: integer
+        syncErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              personName:
+                type: string
+              lastSyncError:
+                type: string
+              updatedAt:
+                type: string
+                format: date-time
+
+    SystemHealth:
+      type: object
+      properties:
+        healthScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 85
+        status:
+          type: string
+          enum: [healthy, warning, critical]
+          example: "healthy"
+        issues:
+          type: array
+          items:
+            type: string
+          example: ["5% of tokens need attention"]
+        components:
+          type: object
+          properties:
+            tokens:
+              type: object
+              properties:
+                totalPersons:
+                  type: integer
+                personsWithTokens:
+                  type: integer
+                healthyTokens:
+                  type: integer
+            connections:
+              type: object
+              properties:
+                connected:
+                  type: integer
+                tested:
+                  type: integer
+            database:
+              type: object
+              properties:
+                totalRecords:
+                  type: integer
+            sync:
+              type: object
+              properties:
+                recentlySuccessful:
+                  type: integer
+                total:
+                  type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    TokenHealth:
+      type: object
+      properties:
+        overall:
+          type: object
+          properties:
+            healthy:
+              type: integer
+            total:
+              type: integer
+            unhealthy:
+              type: integer
+            needsRefresh:
+              type: integer
+        tokens:
+          type: array
+          items:
+            type: object
+            properties:
+              personName:
+                type: string
+              status:
+                type: string
+                enum: [healthy, needs_refresh, invalid, missing, refresh_failed]
+              hasRefreshToken:
+                type: boolean
+              hasAccessToken:
+                type: boolean
+              accessTokenExpiry:
+                type: string
+                format: date-time
+              lastRefreshed:
+                type: string
+                format: date-time
+              isHealthy:
+                type: boolean
+              error:
+                type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ConnectionHealth:
+      type: object
+      properties:
+        overall:
+          type: object
+          properties:
+            connected:
+              type: integer
+            total:
+              type: integer
+            failed:
+              type: integer
+            averageResponseTime:
+              type: number
+        connections:
+          type: array
+          items:
+            type: object
+            properties:
+              personName:
+                type: string
+              status:
+                type: string
+                enum: [connected, failed, unauthorized, network_error, token_error]
+              responseTime:
+                type: integer
+              serverTime:
+                type: string
+              error:
+                type: string
+              isConnected:
+                type: boolean
+        timestamp:
+          type: string
+          format: date-time
+
+    DatabaseHealth:
+      type: object
+      properties:
+        healthScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        statistics:
+          type: object
+          properties:
+            collections:
+              type: object
+              properties:
+                persons:
+                  type: integer
+                tokens:
+                  type: integer
+                accounts:
+                  type: integer
+                positions:
+                  type: integer
+                activities:
+                  type: integer
+                snapshots:
+                  type: integer
+            persons:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  accounts:
+                    type: integer
+                  positions:
+                    type: integer
+                  activities:
+                    type: integer
+                  snapshots:
+                    type: integer
+                  lastSyncTime:
+                    type: string
+                    format: date-time
+                  lastSyncStatus:
+                    type: string
+            lastUpdates:
+              type: object
+              properties:
+                positions:
+                  type: string
+                  format: date-time
+                activities:
+                  type: string
+                  format: date-time
+                accounts:
+                  type: string
+                  format: date-time
+            dataIntegrity:
+              type: object
+              properties:
+                orphanedPositions:
+                  type: integer
+                orphanedActivities:
+                  type: integer
+                personsWithoutTokens:
+                  type: integer
+                personsWithoutAccounts:
+                  type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    AllocationItem:
+      type: object
+      properties:
+        sector:
+          type: string
+          example: "Technology"
+        category:
+          type: string
+          example: "Stocks"
+        value:
+          type: number
+          example: 25000.00
+        percentage:
+          type: number
+          example: 30.30
+
+    CurrencyAllocation:
+      type: object
+      properties:
+        currency:
+          type: string
+          example: "CAD"
+        value:
+          type: number
+          example: 50000.00
+        percentage:
+          type: number
+          example: 60.61
+
+    PersonAllocation:
+      type: object
+      properties:
+        personName:
+          type: string
+        value:
+          type: number
+        percentage:
+          type: number
+        numberOfPositions:
+          type: integer
+
+    AccountSummary:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accountName:
+          type: string
+        accountType:
+          type: string
+        currency:
+          type: string
+        totalInvestment:
+          type: number
+        currentValue:
+          type: number
+        unrealizedPnl:
+          type: number
+        cashBalance:
+          type: number
+        numberOfPositions:
+          type: integer
+        returnPercent:
+          type: number
+        lastUpdated:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (if implemented)
+
+# Security (if you implement API key authentication)
+# security:
+#   - ApiKeyAuth: []

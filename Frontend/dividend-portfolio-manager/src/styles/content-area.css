@@ -1,0 +1,215 @@
+/* src/styles/content-area.css */
+.content-area {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    min-height: 600px;
+}
+
+.content-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--neutral-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--neutral-50) 0%, rgba(248, 250, 252, 0.5) 100%);
+}
+
+.content-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    letter-spacing: -0.025em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-context {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--neutral-500);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Aggregation indicators */
+.aggregation-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-50);
+    color: var(--primary-700);
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--primary-200);
+}
+
+.aggregation-icon {
+    font-size: 0.9rem;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding: 0.625rem 0.875rem;
+    padding-left: 2.25rem;
+    border: 1px solid var(--neutral-200);
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    width: 220px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.search-box::before {
+    content: '🔍';
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    width: 260px;
+}
+
+.btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--neutral-200);
+    padding: 0.625rem 0.875rem;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--neutral-700);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn:hover {
+    background: var(--neutral-50);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.auto-refresh {
+    background: linear-gradient(135deg, var(--success-50) 0%, var(--success-100) 100%);
+    color: var(--success-700);
+    padding: 0.4rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 1px solid var(--success-200);
+}
+
+/* Aggregation info banner */
+.aggregation-info-banner {
+    background: linear-gradient(135deg, var(--primary-50) 0%, rgba(59, 130, 246, 0.08) 100%);
+    border: 1px solid var(--primary-200);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.aggregation-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.stat-icon {
+    font-size: 1rem;
+}
+
+.stat-text {
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.aggregation-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--neutral-600);
+}
+
+/* Column Settings Dropdown */
+.columns-btn-container {
+    position: relative;
+    display: inline-block;
+}
+
+.column-settings {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--neutral-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    animation: slideDown 0.3s ease;
+}
+
+.column-checkboxes {
+    padding: 0.5rem 0;
+}
+
+.column-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.8125rem;
+    color: var(--neutral-700);
+    cursor: pointer;
+    padding: 0.625rem 0.875rem;
+    transition: background-color 0.2s;
+}
+
+.column-checkboxes label:hover {
+    background: var(--primary-50);
+}
+
+.column-checkboxes label.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.column-checkboxes input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+}

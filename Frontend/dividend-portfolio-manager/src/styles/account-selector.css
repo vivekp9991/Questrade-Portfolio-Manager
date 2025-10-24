@@ -1,0 +1,252 @@
+/* src/styles/account-selector.css - SIMPLE DROPDOWN POSITIONING FIX */
+.account-selection {
+    position: relative;
+}
+
+.account-selector {
+    position: relative;
+    display: inline-block;
+}
+
+.account-selector-button {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--neutral-200);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    min-width: 200px;
+    backdrop-filter: blur(10px);
+}
+
+.account-selector-button:not(:disabled):hover {
+    background: var(--neutral-50);
+    border-color: var(--primary-300);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+.account-selector-button.open {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.account-selector-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.selected-account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.account-icon {
+    font-size: 1rem;
+}
+
+.account-label {
+    font-weight: 500;
+    color: var(--neutral-700);
+}
+
+.dropdown-arrow {
+    color: var(--neutral-400);
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.account-selector-button.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* SIMPLE FIX: Use absolute positioning relative to parent */
+.account-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    min-width: 280px;
+    max-height: 400px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--neutral-200);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+    overflow-y: auto;
+    animation: slideDown 0.3s ease;
+    pointer-events: auto;
+}
+
+/* If dropdown would go off screen, show it above */
+@media (max-height: 600px) {
+    .account-dropdown {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+}
+
+/* Loading and empty states */
+.dropdown-loading,
+.dropdown-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--neutral-500);
+    font-size: 0.875rem;
+}
+
+.dropdown-content {
+    padding: 0.5rem 0;
+}
+
+.dropdown-group {
+    margin-bottom: 0.5rem;
+}
+
+.dropdown-group:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-group-label {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--neutral-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--neutral-50);
+    border-bottom: 1px solid var(--neutral-200);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    user-select: none;
+}
+
+.dropdown-option:hover {
+    background: var(--primary-50);
+    border-left-color: var(--primary-500);
+}
+
+.dropdown-option.selected {
+    background: var(--primary-100);
+    border-left-color: var(--primary-600);
+    color: var(--primary-700);
+}
+
+.option-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.option-label {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.option-badge {
+    background: var(--primary-500);
+    color: white;
+    border-radius: 12px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.option-type {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    background: var(--neutral-100);
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* Animation */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Custom scrollbar */
+.account-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.account-dropdown::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: 3px;
+}
+
+.account-dropdown::-webkit-scrollbar-thumb {
+    background: var(--primary-300);
+    border-radius: 3px;
+}
+
+.account-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-400);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .account-dropdown {
+        min-width: 250px;
+        max-height: 300px;
+        left: -25px;
+        right: -25px;
+    }
+    
+    .dropdown-option {
+        padding: 0.625rem 0.875rem;
+    }
+    
+    .dropdown-group-label {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.7rem;
+    }
+    
+    .account-selector-button {
+        min-width: 180px;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .account-dropdown {
+        left: -50px;
+        right: -50px;
+        min-width: 200px;
+    }
+    
+    .account-selector-button {
+        min-width: 160px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
