@@ -10,6 +10,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const loginRoutes = require('./routes/login');
 const personsRoutes = require('./routes/persons');
 const tokensRoutes = require('./routes/tokens');
 const healthRoutes = require('./routes/health');
@@ -59,6 +60,7 @@ app.get('/health', async (req, res) => {
 
 // API routes
 app.use('/api/health', healthRoutes);
+app.use('/api/login', loginRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/persons', personsRoutes);
 app.use('/api/tokens', tokensRoutes);
@@ -70,6 +72,11 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     description: 'Authentication and Token Management Service',
     endpoints: {
+      login: {
+        'POST /api/login': 'User login',
+        'POST /api/login/verify': 'Verify JWT token',
+        'POST /api/login/refresh': 'Refresh JWT token'
+      },
       auth: {
         'POST /api/auth/setup-person': 'Setup new person with token',
         'POST /api/auth/refresh-token/:personName': 'Refresh access token',

@@ -403,6 +403,38 @@
   height: 14px;
 }
 
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--error-bg, rgba(248, 81, 73, 0.1));
+  border: 1px solid var(--error-border, rgba(248, 81, 73, 0.3));
+  border-radius: 6px;
+  color: var(--error-text, #f85149);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background: rgba(248, 81, 73, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+.logout-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .topbar {

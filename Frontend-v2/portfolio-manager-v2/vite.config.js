@@ -21,7 +21,19 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-market/, '/api'),
       },
+      '/api/login': {
+        target: 'http://localhost:4001',
+        changeOrigin: true,
+      },
       '/api/persons': {
+        target: 'http://localhost:4001',
+        changeOrigin: true,
+      },
+      '/api/tokens': {
+        target: 'http://localhost:4001',
+        changeOrigin: true,
+      },
+      '/api/auth': {
         target: 'http://localhost:4001',
         changeOrigin: true,
       },

@@ -1,25 +1,54 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, Show } from 'solid-js';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import Holdings from './pages/Holdings';
 import Analysis from './pages/Analysis';
 import Backtesting from './pages/Backtesting';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
 import { fetchPersons } from './services/api';
+import { isAuthenticated, logout, getUser } from './utils/auth';
 import './App.css';
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = createSignal(false);
   const [activePage, setActivePage] = createSignal('holdings');
   const [isSyncing, setIsSyncing] = createSignal(false);
-  const [selectedPerson, setSelectedPerson] = createSignal('all'); // Changed default to 'all'
+  const [selectedPerson, setSelectedPerson] = createSignal('all');
   const [selectedCurrency, setSelectedCurrency] = createSignal('CAD');
-  const [currencyFilter, setCurrencyFilter] = createSignal(null); // null = combined, 'CAD' = CAD only, 'USD' = USD only
+  const [currencyFilter, setCurrencyFilter] = createSignal(null);
   const [exchangeRate, setExchangeRate] = createSignal(1.4015);
   const [persons, setPersons] = createSignal([]);
-  const [accountFilter, setAccountFilter] = createSignal({ type: 'all', value: null }); // Changed default to 'all'
+  const [accountFilter, setAccountFilter] = createSignal({ type: 'all', value: null });
 
-  // Fetch persons on mount
-  onMount(async () => {
+  // Check authentication on mount and set up periodic checks
+  onMount(() => {
+    checkAuth();
+
+    // Check authentication every minute
+    const authCheckInterval = setInterval(() => {
+      if (!isAuthenticated()) {
+        setIsLoggedIn(false);
+      }
+    }, 60000); // 1 minute
+
+    // Cleanup interval on unmount
+    return () => clearInterval(authCheckInterval);
+  });
+
+  const checkAuth = () => {
+    const authenticated = isAuthenticated();
+    setIsLoggedIn(authenticated);
+
+    if (authenticated) {
+      const user = getUser();
+      console.log('✅ User authenticated:', user?.displayName);
+      loadPersons();
+    }
+  };
+
+  // Fetch persons when logged in
+  const loadPersons = async () => {
     try {
       const personsData = await fetchPersons();
       if (personsData && personsData.length > 0) {
@@ -29,10 +58,12 @@ function App() {
       }
     } catch (error) {
       console.error('❌ Error loading persons:', error);
-      // Fallback to default
-      setPersons(['Vivek']);
+      // If fetch fails due to auth, logout
+      if (error.message?.includes('401')) {
+        handleLogout();
+      }
     }
-  });
+  };
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -86,43 +117,60 @@ function App() {
     }
   };
 
-  return (
-    <div class="app">
-      <Sidebar
-        active={activePage()}
-        onNavigate={setActivePage}
-      />
+  const handleLogout = () => {
+    logout();
+    setIsLoggedIn(false);
+    setActivePage('holdings'); // Reset to default page
+    console.log('👋 User logged out');
+  };
 
-      <div class="main-content">
-        <Topbar
-          onSync={handleSync}
-          isSyncing={isSyncing()}
-          selectedPerson={selectedPerson()}
-          selectedCurrency={selectedCurrency()}
-          currencyFilter={currencyFilter()}
-          exchangeRate={exchangeRate()}
-          persons={persons()}
-          onPersonChange={handlePersonChange}
-          onCurrencyChange={handleCurrencyChange}
-          onAccountChange={handleAccountChange}
+  const handleLoginSuccess = () => {
+    checkAuth(); // Re-check authentication and load data
+  };
+
+  return (
+    <Show
+      when={isLoggedIn()}
+      fallback={<Login onLoginSuccess={handleLoginSuccess} />}
+    >
+      <div class="app">
+        <Sidebar
+          active={activePage()}
+          onNavigate={setActivePage}
         />
 
-        <div class="page-container">
-          {activePage() === 'holdings' && (
-            <Holdings
-              selectedPerson={selectedPerson()}
-              selectedCurrency={selectedCurrency()}
-              currencyFilter={currencyFilter}
-              onExchangeRateUpdate={setExchangeRate}
-              accountFilter={accountFilter}
-            />
-          )}
-          {activePage() === 'analysis' && <Analysis />}
-          {activePage() === 'backtesting' && <Backtesting />}
-          {activePage() === 'settings' && <Settings />}
+        <div class="main-content">
+          <Topbar
+            onSync={handleSync}
+            isSyncing={isSyncing()}
+            selectedPerson={selectedPerson()}
+            selectedCurrency={selectedCurrency()}
+            currencyFilter={currencyFilter()}
+            exchangeRate={exchangeRate()}
+            persons={persons()}
+            onPersonChange={handlePersonChange}
+            onCurrencyChange={handleCurrencyChange}
+            onAccountChange={handleAccountChange}
+            onLogout={handleLogout}
+          />
+
+          <div class="page-container">
+            {activePage() === 'holdings' && (
+              <Holdings
+                selectedPerson={selectedPerson()}
+                selectedCurrency={selectedCurrency()}
+                currencyFilter={currencyFilter}
+                onExchangeRateUpdate={setExchangeRate}
+                accountFilter={accountFilter}
+              />
+            )}
+            {activePage() === 'analysis' && <Analysis />}
+            {activePage() === 'backtesting' && <Backtesting />}
+            {activePage() === 'settings' && <Settings />}
+          </div>
         </div>
       </div>
-    </div>
+    </Show>
   );
 }
 
