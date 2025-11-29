@@ -356,6 +356,10 @@ export default function Holdings(props) {
     // This means we EXCLUDE positions where excludedFromYoC === true
     let yocTotalInvested = 0; // Investment only for stocks included in YoC
     let yocTotalDividendIncome = 0; // Dividends only for stocks included in YoC
+    // FIX: Track dividends by symbol to avoid counting duplicates across accounts
+    // Same symbol in multiple accounts has the same dividend total, so we only count once
+    const dividendsBySymbol = new Map();
+
 
     console.log('💹 Calculating metrics in display currency:', displayCurrency);
     console.log(`💹 Processing ${positions.length} positions for metrics calculation`);

@@ -8,6 +8,13 @@
 
 import { createSignal } from 'solid-js';
 
+// Get API base URL from environment
+// In production: https://...amazonaws.com/dev/api
+// In dev: /api
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
 // Export reactive connection state for UI
 // Components can import this to show connection status
 export const [connectionState, setConnectionState] = createSignal({
@@ -101,7 +108,7 @@ class QuestradeWebSocket {
    */
   async fetchAvailablePersons() {
     try {
-      const response = await fetch('/api-auth/persons');
+      const response = await fetch(`${API_BASE}/persons`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch persons: ${response.status}`);
@@ -232,11 +239,11 @@ class QuestradeWebSocket {
    */
   async getAccessToken(personName, forceRefresh = false) {
     try {
-      // Use /api-auth proxy to route to Auth API (port 4001)
+      // Use API_BASE to construct full URL for auth endpoints
       // Add timestamp to bypass cache if forcing refresh
       const url = forceRefresh
-        ? `/api-auth/auth/access-token/${personName}?refresh=${Date.now()}`
-        : `/api-auth/auth/access-token/${personName}`;
+        ? `${API_BASE}/auth/access-token/${personName}?refresh=${Date.now()}`
+        : `${API_BASE}/auth/access-token/${personName}`;
 
       console.log(`[QT WebSocket] ${forceRefresh ? '🔄 Force refreshing' : 'Getting'} access token for ${personName}...`);
 
@@ -273,8 +280,8 @@ class QuestradeWebSocket {
    */
   async loadSymbolIds(symbols, append = false) {
     try {
-      // Use /api-market proxy to route to Market API (port 4004)
-      const response = await fetch(`/api-market/symbols/lookup`, {
+      // Use API_BASE for symbols lookup endpoint
+      const response = await fetch(`${API_BASE}/symbols/lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbols })
@@ -293,10 +300,12 @@ class QuestradeWebSocket {
       }
 
       // Build symbol ID set and map
+      // IMPORTANT: Convert symbolId to Number to match incoming WebSocket quote.symbolId type
       Object.entries(data.data).forEach(([symbol, info]) => {
         if (info.symbolId) {
-          this.subscribedSymbolIds.add(info.symbolId);
-          this.symbolIdMap.set(info.symbolId, symbol);
+          const symbolIdNum = Number(info.symbolId);
+          this.subscribedSymbolIds.add(symbolIdNum);
+          this.symbolIdMap.set(symbolIdNum, symbol);
         }
       });
 
@@ -317,7 +326,7 @@ class QuestradeWebSocket {
       const symbolIdsArray = Array.from(this.subscribedSymbolIds);
 
       // Call backend endpoint to get stream port (avoids CORS)
-      const response = await fetch(`/api-market/symbols/stream-port`, {
+      const response = await fetch(`${API_BASE}/symbols/stream-port`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -477,6 +486,18 @@ class QuestradeWebSocket {
     if (message.quotes && Array.isArray(message.quotes) && message.quotes.length > 0) {
       console.log(`[QT WebSocket] [${timestamp}] 📦 Received ${message.quotes.length} quote updates`);
 
+      // DEBUG: Log symbolIdMap state
+      console.log(`[QT WebSocket] [${timestamp}] 🔍 symbolIdMap size:`, this.symbolIdMap.size);
+      console.log(`[QT WebSocket] [${timestamp}] 🔍 symbolIdMap entries:`, Array.from(this.symbolIdMap.entries()).slice(0, 5));
+
+      // DEBUG: Log incoming symbolIds
+      const incomingSymbolIds = message.quotes.map(q => ({
+        symbolId: q.symbolId,
+        type: typeof q.symbolId,
+        symbol: q.symbol
+      })).slice(0, 5);
+      console.log(`[QT WebSocket] [${timestamp}] 🔍 Incoming symbolIds (first 5):`, incomingSymbolIds);
+
       // Update connection state lastUpdate timestamp
       setConnectionState(prev => ({
         ...prev,
@@ -490,10 +511,18 @@ class QuestradeWebSocket {
           const symbol = this.symbolIdMap.get(quote.symbolId);
           if (symbol) {
             return { ...quote, symbol };
+          } else {
+            // DEBUG: Log when symbolId not found
+            console.warn(`[QT WebSocket] [${timestamp}] ⚠️ symbolId ${quote.symbolId} (${typeof quote.symbolId}) not found in map`);
           }
           return null;
         })
         .filter(quote => quote !== null);
+
+      // DEBUG: Warn if all quotes were filtered out
+      if (processedQuotes.length === 0) {
+        console.error(`[QT WebSocket] [${timestamp}] ❌ All ${message.quotes.length} quotes filtered out - symbolIdMap mismatch!`);
+      }
 
       // Call callback ONCE with all quotes (batch update)
       if (this.onQuoteUpdate && processedQuotes.length > 0) {
@@ -679,6 +708,40 @@ class QuestradeWebSocket {
   handleDisconnect(event) {
     this.isAuthenticated = false;
     this.cleanup();
+
+    // Map close codes to readable messages
+    const closeCodeMeanings = {
+      1000: 'Normal Closure',
+      1001: 'Going Away',
+      1002: 'Protocol Error',
+      1003: 'Unsupported Data',
+      1005: 'No Status Received',
+      1006: 'Abnormal Closure',
+      1007: 'Invalid frame payload',
+      1008: 'Policy Violation (possibly CORS/Origin)',
+      1009: 'Message Too Big',
+      1010: 'Missing Extension',
+      1011: 'Internal Server Error',
+      1012: 'Service Restart',
+      1013: 'Try Again Later',
+      1014: 'Bad Gateway',
+      1015: 'TLS Handshake Failed'
+    };
+
+    const closeCodeMeaning = closeCodeMeanings[event.code] || 'Unknown';
+
+    console.log('[QT WebSocket] ⚠️ Connection closed');
+    console.log(`[QT WebSocket] Close code: ${event.code} (${closeCodeMeaning})`);
+    console.log(`[QT WebSocket] Close reason: ${event.reason || 'No reason provided'}`);
+    console.log(`[QT WebSocket] Was clean close?: ${event.wasClean}`);
+
+    // Special logging for code 1005 (common with CloudFront Origin issues)
+    if (event.code === 1005) {
+      console.warn('[QT WebSocket] ⚠️ Code 1005 may indicate:');
+      console.warn('[QT WebSocket]    • CloudFront Origin header not whitelisted by Questrade');
+      console.warn('[QT WebSocket]    • Server closed connection without sending close frame');
+      console.warn('[QT WebSocket]    • Network/firewall issues');
+    }
 
     // Update connection state to disconnected
     setConnectionState({

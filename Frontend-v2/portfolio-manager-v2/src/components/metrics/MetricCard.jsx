@@ -2,6 +2,13 @@ import { Show, For } from 'solid-js';
 import './MetricCard.css';
 
 const MetricCard = (props) => {
+  // DEBUG: Log props to see what's being passed
+  if (props.name === 'YOC') {
+    console.log('🎯 [MetricCard] YOC card props:', props);
+    console.log('🎯 [MetricCard] extraInfo value:', props.extraInfo);
+    console.log('🎯 [MetricCard] extraInfo type:', typeof props.extraInfo);
+  }
+
   // Check if value contains newlines for multi-line display
   const isMultiLine = () => typeof props.value === 'string' && props.value.includes('\n');
   const lines = () => isMultiLine() ? props.value.split('\n') : [props.value];
@@ -38,6 +45,9 @@ const MetricCard = (props) => {
           </span>
         </Show>
       </div>
+      <Show when={props.extraInfo}>
+        <div class="metric-extra-info">{props.extraInfo}</div>
+      </Show>
     </div>
   );
 };

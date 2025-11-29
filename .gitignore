@@ -45,3 +45,35 @@ terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.backup
 serverless/.serverless/
+**/.aws-sam/
+*.zip
+
+# AWS Access Keys (NEVER COMMIT!)
+**/Aws Access key/
+**/*accessKeys*.csv
+**/*credentials*.csv
+
+# Environment Production (may contain API URLs)
+.env.production
+**/.env.production
+
+# Temporary/Debug files
+lambda-logs-decoded.txt
+*.patch
+test-*.json
+*-response.json
+*-payload.json
+
+# OCI Wallet & Credentials (NEVER COMMIT!)
+OCI-Deployment/wallet/*.sso
+OCI-Deployment/wallet/*.p12
+OCI-Deployment/wallet/*.pem
+OCI-Deployment/wallet/*.jks
+OCI-Deployment/wallet/cwallet.sso
+OCI-Deployment/wallet/ewallet.p12
+OCI-Deployment/wallet/ewallet.pem
+# Keep these for reference (no sensitive data):
+# OCI-Deployment/wallet/tnsnames.ora
+# OCI-Deployment/wallet/sqlnet.ora
+# OCI-Deployment/wallet/ojdbc.properties
+# OCI-Deployment/wallet/CONNECTION-INFO.md

@@ -1,0 +1,1555 @@
+{
+  "info": {
+    "name": "Questrade Portfolio API - AWS",
+    "description": "Complete API collection for testing the AWS SAM deployed Questrade Portfolio Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://1p9dtyfkgi.execute-api.us-east-1.amazonaws.com/dev",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "personName",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Checks",
+      "item": [
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "health"]
+            }
+          }
+        },
+        {
+          "name": "Sync Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "health"]
+            }
+          }
+        },
+        {
+          "name": "Data Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "health"]
+            }
+          }
+        },
+        {
+          "name": "Portfolio Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "health"]
+            }
+          }
+        },
+        {
+          "name": "Market Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "health"]
+            }
+          }
+        },
+        {
+          "name": "Watchlist Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.data.token);",
+                  "    console.log('JWT Token saved:', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"victor\",\n  \"password\": \"Admin@2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Person Management",
+      "item": [
+        {
+          "name": "Create Person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('personName', jsonData.data.name);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"test-person\",\n  \"description\": \"Test person for API testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Get All Persons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Get Person by Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Person",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Person",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "active"]
+            }
+          }
+        },
+        {
+          "name": "Set Active Person",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{personName}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "active"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Questrade Token Management",
+      "item": [
+        {
+          "name": "Setup Questrade Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personName\": \"Vivek\",\n  \"refreshToken\": \"YOUR_QUESTRADE_REFRESH_TOKEN_HERE\",\n  \"userId\": \"user-victor-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/setup-person",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "setup-person"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "token"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Questrade Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Test Questrade Connection",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Token Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Token Administration",
+      "item": [
+        {
+          "name": "Get All Tokens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "Get Token by Person",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Token",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"NEW_REFRESH_TOKEN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Sync Operations",
+      "description": "Phase 1: Core Sync Operations - Sync data from Questrade API to DynamoDB",
+      "item": [
+        {
+          "name": "Trigger Person Sync",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success property\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains sync data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('personName');",
+                  "    pm.expect(jsonData.data).to.have.property('syncType');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/person/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "person", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync"
+                }
+              ]
+            },
+            "description": "Performs a FULL sync for a person: accounts + positions + activities (1 year history)"
+          },
+          "response": []
+        },
+        {
+          "name": "Sync All Persons",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains all persons sync results\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.data.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "all"]
+            },
+            "description": "Syncs ALL persons from the Persons table. Each person gets a full sync."
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Accounts Only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Sync type is 'accounts'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.syncType).to.equal('accounts');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains accounts count\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('accounts');",
+                  "    pm.expect(jsonData.data.accounts).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/accounts/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "accounts", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync accounts for"
+                }
+              ]
+            },
+            "description": "NEW - Phase 1: Syncs ONLY accounts for a person. Faster than full sync when you only need account data."
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Positions Only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Sync type is 'positions'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.syncType).to.equal('positions');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains positions count\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('positions');",
+                  "    pm.expect(jsonData.data.positions).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/positions/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "positions", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync positions for"
+                }
+              ]
+            },
+            "description": "NEW - Phase 1: Syncs ONLY current positions for all accounts. Useful for portfolio monitoring."
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Activities Only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Sync type is 'activities'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.syncType).to.equal('activities');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains activities count\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('activities');",
+                  "    pm.expect(jsonData.data.activities).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/activities/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "activities", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync activities for"
+                }
+              ]
+            },
+            "description": "NEW - Phase 1: Syncs ONLY activities (1 year history) for all accounts. Includes trades, deposits, withdrawals, interest."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sync Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains status for all persons\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Each person has lastSync timestamp\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        pm.expect(jsonData.data[0]).to.have.property('personName');",
+                  "        pm.expect(jsonData.data[0]).to.have.property('lastSync');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "status"]
+            },
+            "description": "NEW - Phase 1: Gets current sync status for all persons. Shows last sync time and status for each person."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sync History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains history array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"History records have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        pm.expect(jsonData.data[0]).to.have.property('personName');",
+                  "        pm.expect(jsonData.data[0]).to.have.property('syncTimestamp');",
+                  "        pm.expect(jsonData.data[0]).to.have.property('syncType');",
+                  "        pm.expect(jsonData.data[0]).to.have.property('status');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of history records to return"
+                },
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Filter by person name",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "Filter by status (completed, failed, in_progress)",
+                  "disabled": true
+                },
+                {
+                  "key": "syncType",
+                  "value": "full",
+                  "description": "Filter by sync type (full, accounts, positions, activities)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "NEW - Phase 1: Gets sync history with optional filters. Returns up to 50 most recent sync operations. Enable query params to filter by person, status, or syncType."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Data Read",
+      "item": [
+        {
+          "name": "Get All Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/accounts?personName=Vivek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "accounts"],
+              "query": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Filter accounts by person name"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Account by Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/accounts/:accountNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "accounts", ":accountNumber"]
+            }
+          }
+        },
+        {
+          "name": "Get All Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/positions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "positions"]
+            }
+          }
+        },
+        {
+          "name": "Get Positions by Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/positions/account/:accountId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "positions", "account", ":accountId"],
+              "variable": [
+                {
+                  "key": "accountId",
+                  "value": "53413547",
+                  "description": "Account ID (e.g., 53413547)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Activities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/activities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "activities"]
+            }
+          }
+        },
+        {
+          "name": "Get Activities by Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/activities/account/:accountId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "activities", "account", ":accountId"],
+              "variable": [
+                {
+                  "key": "accountId",
+                  "value": "53413547",
+                  "description": "Account ID (e.g., 53413547)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Person Accounts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains accounts array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get all accounts for a specific person (sorted by isPrimary and totalEquity)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains summary data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('totalEquityCAD');",
+                  "    pm.expect(jsonData.data).to.have.property('accountCount');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/summary/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "summary", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get account summary totals (total equity, cash, market value, account count)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Dropdown Options",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains dropdown options\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    if (jsonData.data.length > 0) {",
+                  "        pm.expect(jsonData.data[0]).to.have.property('value');",
+                  "        pm.expect(jsonData.data[0]).to.have.property('label');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/dropdown-options?personName=Vivek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "dropdown-options"],
+              "query": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Filter by person name (optional)"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get account dropdown options for UI (value, label, personName, accountType, isPrimary)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains account details\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('accountId');",
+                  "    pm.expect(jsonData.data).to.have.property('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/detail/:accountId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "detail", ":accountId"],
+              "variable": [
+                {
+                  "key": "accountId",
+                  "value": "53413547",
+                  "description": "Account ID"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get detailed account information by accountId"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Person Positions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains positions data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('positions');",
+                  "    pm.expect(jsonData.data.positions).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/positions/person/:personName?aggregated=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "positions", "person", ":personName"],
+              "query": [
+                {
+                  "key": "aggregated",
+                  "value": "true",
+                  "description": "Aggregate positions by symbol (default: true)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get all positions for a person (optionally aggregated by symbol across accounts)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Person Activities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains activities data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('activities');",
+                  "    pm.expect(jsonData.data.activities).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/activities/person/:personName?limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "activities", "person", ":personName"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Limit number of activities (default: 100)"
+                },
+                {
+                  "key": "type",
+                  "value": "Dividend",
+                  "description": "Filter by activity type",
+                  "disabled": true
+                },
+                {
+                  "key": "symbol",
+                  "value": "TD",
+                  "description": "Filter by symbol",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01",
+                  "description": "Start date (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31",
+                  "description": "End date (YYYY-MM-DD)",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name"
+                }
+              ]
+            },
+            "description": "NEW - Phase 2: Get all activities for a person with optional filters (type, symbol, dateRange)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Portfolio Analytics",
+      "item": [
+        {
+          "name": "Get Portfolio Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Performance Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "performance"]
+            }
+          }
+        },
+        {
+          "name": "Get Allocation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/allocation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "allocation"]
+            }
+          }
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "analytics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Market Data",
+      "item": [
+        {
+          "name": "Get Market Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Quote",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/quotes/:symbolId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "quotes", ":symbolId"]
+            }
+          }
+        },
+        {
+          "name": "Search Symbols",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/symbols/search?query=AAPL",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "symbols", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "AAPL"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Watchlists",
+      "item": [
+        {
+          "name": "Get All Watchlists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist"]
+            }
+          }
+        },
+        {
+          "name": "Create Watchlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Watchlist\",\n  \"symbols\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist"]
+            }
+          }
+        },
+        {
+          "name": "Update Watchlist",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Watchlist\",\n  \"symbols\": [\"AAPL\", \"MSFT\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Watchlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ":id"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

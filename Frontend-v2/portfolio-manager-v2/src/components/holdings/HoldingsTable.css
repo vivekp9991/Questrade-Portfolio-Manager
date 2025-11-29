@@ -288,6 +288,10 @@
   max-width: 180px;
   text-align: left;
   padding-left: 16px;
+  position: sticky;
+  left: 0;
+  background: var(--bg-secondary);
+  z-index: 10;
 }
 
 .holdings-table tbody tr {
@@ -296,6 +300,10 @@
 }
 
 .holdings-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.holdings-table tbody tr:hover .td-stock {
   background: var(--bg-tertiary);
 }
 
@@ -323,6 +331,10 @@
   max-width: 180px;
   text-align: left;
   padding-left: 16px;
+  position: sticky;
+  left: 0;
+  background: var(--bg-secondary);
+  z-index: 5;
 }
 
 .td-value {

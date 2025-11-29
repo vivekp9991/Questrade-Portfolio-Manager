@@ -1,0 +1,17 @@
+{
+  "name": "questrade-portfolio-analytics",
+  "version": "1.0.0",
+  "description": "Portfolio Analytics Service - Calculate portfolio metrics and analytics",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

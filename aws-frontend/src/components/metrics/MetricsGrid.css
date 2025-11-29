@@ -1,0 +1,40 @@
+.metrics-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* Updated for 7 cards */
+  gap: 8px;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease;
+  box-sizing: border-box;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1400px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+}

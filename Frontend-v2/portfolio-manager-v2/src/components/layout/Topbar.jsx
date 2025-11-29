@@ -7,17 +7,33 @@ import './Topbar.css';
 const Topbar = (props) => {
   const [isLive, setIsLive] = createSignal(isMarketOpen());
   const [showAccountDropdown, setShowAccountDropdown] = createSignal(false);
+  const [showStockTypeDropdown, setShowStockTypeDropdown] = createSignal(false);
   const [showCurrencyDropdown, setShowCurrencyDropdown] = createSignal(false);
   const [accounts, setAccounts] = createSignal([]);
   const [selectedView, setSelectedView] = createSignal('person'); // 'all', 'person', 'account'
   const [selectedAccount, setSelectedAccount] = createSignal(null);
 
   // Get persons from props
-  const persons = () => props.persons && props.persons.length > 0 ? props.persons : ['Vivek'];
-  const selectedPerson = () => props.selectedPerson || 'Vivek';
+  const persons = () => props.persons && props.persons.length > 0 ? props.persons.filter(p => p !== 'all') : [];
+  const selectedPerson = () => props.selectedPerson || 'all';
   const selectedCurrency = () => props.selectedCurrency || 'CAD';
   const currencyFilter = () => props.currencyFilter || null;
   const exchangeRate = () => props.exchangeRate || 1.4002;
+  const stockTypeFilter = () => props.stockTypeFilter || 'all';
+
+  // Stock type filter options
+  const stockTypeOptions = [
+    { value: 'all', label: 'All Stocks', icon: '📊', desc: 'Show all holdings' },
+    { value: 'dividend', label: 'Dividend Stocks', icon: '💰', desc: 'Stocks with dividends' },
+    { value: 'non-dividend', label: 'Non-Dividend Stocks', icon: '📈', desc: 'Stocks without dividends' }
+  ];
+
+  // Get stock type display text for button
+  const getStockTypeDisplayText = () => {
+    const filterValue = stockTypeFilter();
+    const option = stockTypeOptions.find(opt => opt.value === filterValue);
+    return option ? option.label : 'All Stocks';
+  };
 
   // Get currency display text for button
   const getCurrencyDisplayText = () => {
@@ -70,6 +86,22 @@ const Topbar = (props) => {
     });
   });
 
+  // Reload accounts when person changes
+  createEffect(async () => {
+    const person = selectedPerson();
+    if (person && person !== 'all') {
+      try {
+        const cashData = await fetchCashBalances(person);
+        if (cashData && cashData.accounts) {
+          setAccounts(cashData.accounts);
+        }
+      } catch (error) {
+        console.error('Error loading accounts for person:', person, error);
+      }
+    }
+  });
+
+
   const handleAccountSelection = (type, value) => {
     setSelectedView(type);
     if (type === 'account') {
@@ -78,6 +110,11 @@ const Topbar = (props) => {
     setShowAccountDropdown(false);
     // Notify parent if needed
     props.onAccountChange?.(type, value);
+  };
+
+  const handleStockTypeSelection = (stockType) => {
+    props.onStockTypeChange?.(stockType);
+    setShowStockTypeDropdown(false);
   };
 
   const handleCurrencySelection = (mode, currency) => {
@@ -90,7 +127,7 @@ const Topbar = (props) => {
     if (selectedView() === 'person') return selectedPerson();
     if (selectedView() === 'account' && selectedAccount()) {
       const acc = selectedAccount();
-      return `${acc.accountType} - ${acc.accountId.slice(-8)}`;
+      return `${acc.accountType} - ${acc.accountNumber || acc.accountId}`;
     }
     return selectedPerson();
   };
@@ -155,29 +192,74 @@ const Topbar = (props) => {
                 </For>
               </div>
 
-              {/* INDIVIDUAL ACCOUNTS Section */}
+              {/* INDIVIDUAL ACCOUNTS Section - Grouped by Person */}
               <Show when={accounts().length > 0}>
-                <div class="dropdown-section">
-                  <div class="dropdown-section-header">INDIVIDUAL ACCOUNTS</div>
-                  <For each={accounts()}>
-                    {(account) => (
-                      <div
-                        class={`dropdown-option ${selectedView() === 'account' && selectedAccount()?.accountId === account.accountId ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAccountSelection('account', account);
-                        }}
-                      >
-                        <span class="option-icon">🏦</span>
-                        <div class="option-content">
-                          <span class="option-text">{account.accountType} - {account.accountId}</span>
-                          <span class="option-badge">{account.accountType}</span>
+                <For each={persons()}>
+                  {(person) => {
+                    const personAccounts = accounts().filter(acc => acc.personName === person);
+                    return (
+                      <Show when={personAccounts.length > 0}>
+                        <div class="dropdown-section">
+                          <div class="dropdown-section-header">{person.toUpperCase()}'S ACCOUNTS</div>
+                          <For each={personAccounts}>
+                            {(account) => (
+                              <div
+                                class={`dropdown-option ${selectedView() === 'account' && selectedAccount()?.accountId === account.accountId ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAccountSelection('account', account);
+                                }}
+                              >
+                                <span class="option-icon">🏦</span>
+                                <div class="option-content">
+                                  <span class="option-text">{account.accountType} - {account.accountNumber || account.accountId}</span>
+                                </div>
+                              </div>
+                            )}
+                          </For>
                         </div>
-                      </div>
-                    )}
-                  </For>
-                </div>
+                      </Show>
+                    );
+                  }}
+                </For>
               </Show>
+            </div>
+          </Show>
+        </div>
+
+        {/* Stock Type Filter Dropdown */}
+        <div class="topbar-dropdown" onClick={() => setShowStockTypeDropdown(!showStockTypeDropdown())}>
+          <span class="dropdown-icon">📊</span>
+          <span class="dropdown-text">{getStockTypeDisplayText()}</span>
+          <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+
+          <Show when={showStockTypeDropdown()}>
+            <div class="dropdown-panel stock-type-dropdown">
+              <div class="dropdown-section">
+                <div class="dropdown-section-header">📊 FILTER BY STOCK TYPE</div>
+                <For each={stockTypeOptions}>
+                  {(option) => (
+                    <div
+                      class={`dropdown-option ${stockTypeFilter() === option.value ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStockTypeSelection(option.value);
+                      }}
+                    >
+                      <span class="option-icon">{option.icon}</span>
+                      <div class="option-content">
+                        <span class="option-text">{option.label}</span>
+                        <span class="option-desc">{option.desc}</span>
+                      </div>
+                      <Show when={stockTypeFilter() === option.value}>
+                        <span class="option-check">✓</span>
+                      </Show>
+                    </div>
+                  )}
+                </For>
+              </div>
             </div>
           </Show>
         </div>

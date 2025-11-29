@@ -1,0 +1,19 @@
+{
+  "name": "questrade-auth-service",
+  "version": "1.0.0",
+  "description": "Authentication Service for Questrade Portfolio Manager",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "axios": "^1.7.2",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

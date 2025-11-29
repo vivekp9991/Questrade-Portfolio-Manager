@@ -1,7 +1,12 @@
 // API Service - Portfolio Manager V2
-// Using Vite proxy: /api -> http://localhost:4003
+// Using Vite proxy in dev: /api -> http://localhost:4003
+// Using AWS API Gateway in production
 
-const API_BASE = '/api';
+// In production: https://...amazonaws.com/dev/api
+// In dev: /api
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
 
 // Handle API responses
 async function handleResponse(response) {
@@ -76,9 +81,16 @@ export async function fetchExchangeRate() {
   }
 }
 
-// Sync portfolio data
+// Sync portfolio data for a person (all accounts)
 export async function syncPortfolio(personName = 'Vivek') {
-  const url = `${API_BASE}/sync/sync-person/${personName}`;
+  const url = `${API_BASE}/sync/person/${personName}`;
+  const response = await fetch(url, { method: 'POST' });
+  return handleResponse(response);
+}
+
+// Sync specific account
+export async function syncAccount(personName, accountNumber) {
+  const url = `${API_BASE}/sync/account/${personName}/${accountNumber}`;
   const response = await fetch(url, { method: 'POST' });
   return handleResponse(response);
 }

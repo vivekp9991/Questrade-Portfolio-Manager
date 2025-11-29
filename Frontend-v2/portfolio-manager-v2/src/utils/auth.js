@@ -2,6 +2,13 @@
  * Authentication utility functions
  */
 
+// Get API base URL from environment
+// In production: https://...amazonaws.com/dev/api
+// In dev: /api
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'user';
 const LOGIN_TIME_KEY = 'loginTime';
@@ -42,12 +49,18 @@ export function getToken() {
  */
 export function getUser() {
   const userStr = localStorage.getItem(USER_KEY);
-  if (!userStr) return null;
+
+  // Handle corrupted or invalid user data
+  if (!userStr || userStr === 'undefined' || userStr === 'null') {
+    return null;
+  }
 
   try {
     return JSON.parse(userStr);
   } catch (error) {
     console.error('Error parsing user data:', error);
+    // Clear corrupted data
+    localStorage.removeItem(USER_KEY);
     return null;
   }
 }
@@ -91,7 +104,7 @@ export async function verifyToken() {
   if (!token) return false;
 
   try {
-    const response = await fetch('/api/login/verify', {
+    const response = await fetch(`${API_BASE}/login/verify`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -115,7 +128,7 @@ export async function refreshToken() {
   if (!token) return false;
 
   try {
-    const response = await fetch('/api/login/refresh', {
+    const response = await fetch(`${API_BASE}/login/refresh`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

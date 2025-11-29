@@ -15,6 +15,7 @@ export default function Settings() {
   // Token Management State
   const [selectedPerson, setSelectedPerson] = createSignal('');
   const [tokenInfo, setTokenInfo] = createSignal(null);
+  const [newRefreshToken, setNewRefreshToken] = createSignal('');
 
   // Data Sync State
   const [syncStatus, setSyncStatus] = createSignal(null);
@@ -25,7 +26,7 @@ export default function Settings() {
   const [syncItemsPerPage] = createSignal(10);
 
   // Dividend Manager State - handled by DividendManager component
-  const [dividendPerson, setDividendPerson] = createSignal('Vivek');
+  const [dividendPerson, setDividendPerson] = createSignal('');
 
   // System Health State
   const [healthStatus, setHealthStatus] = createSignal({
@@ -212,13 +213,18 @@ export default function Settings() {
       showMessage('Please select a person', 'error');
       return;
     }
+    if (!newRefreshToken()) {
+      showMessage('Please enter a refresh token', 'error');
+      return;
+    }
     try {
       setLoading(true);
-      await settingsApi.refreshToken(selectedPerson());
-      showMessage('Token refreshed successfully', 'success');
+      await settingsApi.updateRefreshToken(selectedPerson(), newRefreshToken());
+      showMessage('Token updated successfully', 'success');
+      setNewRefreshToken(''); // Clear input
       await handleLoadToken();
     } catch (error) {
-      showMessage(`Failed to refresh token: ${error.message}`, 'error');
+      showMessage(`Failed to update token: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -373,7 +379,7 @@ export default function Settings() {
     try {
       setLoading(true);
       showMessage('Syncing previous day close for all persons...', 'info');
-      await settingsApi.syncCandlesAll();
+      await settingsApi.syncMasterCandles();
       showMessage('Previous day close synced successfully', 'success');
       await loadSyncStatus();
       await loadSyncHistory();
@@ -501,7 +507,7 @@ export default function Settings() {
   createEffect(() => {
     const tab = activeTab();
     if (tab === 'sync') loadSyncHistory();
-    if (tab === 'dividends') loadDividendPositions();
+    // DividendManager loads its own data via createEffect
     if (tab === 'health') loadHealthStatus();
     if (tab === 'errors') loadErrorLogs();
   });
@@ -652,8 +658,24 @@ export default function Settings() {
               <button class="btn btn-primary" onClick={handleLoadToken} disabled={loading()}>
                 LOAD TOKEN
               </button>
-              <button class="btn btn-secondary" onClick={handleRefreshToken} disabled={loading()}>
-                REFRESH TOKEN
+            </div>
+
+            <h2 class="section-title">UPDATE REFRESH TOKEN</h2>
+            <div class="form-row">
+              <input
+                type="text"
+                placeholder="Enter new Questrade refresh token"
+                value={newRefreshToken()}
+                onInput={(e) => setNewRefreshToken(e.target.value)}
+                class="form-input"
+                style="flex: 3;"
+              />
+              <button
+                class="btn btn-secondary"
+                onClick={handleRefreshToken}
+                disabled={loading() || !selectedPerson() || !newRefreshToken()}
+              >
+                UPDATE TOKEN
               </button>
             </div>
 

@@ -1,0 +1,15 @@
+{
+  "name": "monthly-dividend-sync",
+  "version": "1.0.0",
+  "description": "Monthly dividend sync scheduler for Questrade portfolio",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["questrade", "dividend", "sync", "scheduler"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.0.0"
+  }
+}

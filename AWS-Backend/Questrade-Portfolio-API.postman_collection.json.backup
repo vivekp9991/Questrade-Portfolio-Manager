@@ -1,0 +1,1059 @@
+{
+  "info": {
+    "name": "Questrade Portfolio API - AWS",
+    "description": "Complete API collection for testing the AWS SAM deployed Questrade Portfolio Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://1p9dtyfkgi.execute-api.us-east-1.amazonaws.com/dev",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "personName",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Checks",
+      "item": [
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "health"]
+            }
+          }
+        },
+        {
+          "name": "Sync Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "health"]
+            }
+          }
+        },
+        {
+          "name": "Data Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "health"]
+            }
+          }
+        },
+        {
+          "name": "Portfolio Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "health"]
+            }
+          }
+        },
+        {
+          "name": "Market Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "health"]
+            }
+          }
+        },
+        {
+          "name": "Watchlist Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.data.token);",
+                  "    console.log('JWT Token saved:', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"victor\",\n  \"password\": \"Admin@2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Person Management",
+      "item": [
+        {
+          "name": "Create Person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('personName', jsonData.data.name);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"test-person\",\n  \"description\": \"Test person for API testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Get All Persons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Get Person by Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Person",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Person",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "active"]
+            }
+          }
+        },
+        {
+          "name": "Set Active Person",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{personName}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/persons/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "persons", "active"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Questrade Token Management",
+      "item": [
+        {
+          "name": "Setup Questrade Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personName\": \"Vivek\",\n  \"refreshToken\": \"YOUR_QUESTRADE_REFRESH_TOKEN_HERE\",\n  \"userId\": \"user-victor-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/setup-person",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "setup-person"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "token"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Questrade Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Test Questrade Connection",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Token Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Token Administration",
+      "item": [
+        {
+          "name": "Get All Tokens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "Get Token by Person",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Token",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"NEW_REFRESH_TOKEN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{personName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{personName}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Sync Operations",
+      "item": [
+        {
+          "name": "Trigger Person Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/person/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "person", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sync All Persons",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "all"]
+            }
+          }
+        },
+        {
+          "name": "Sync Accounts Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/accounts/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "accounts", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync accounts for"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sync Positions Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/positions/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "positions", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync positions for"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sync Activities Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/activities/:personName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "activities", ":personName"],
+              "variable": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Person name to sync activities for"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Sync Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Sync History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sync/history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sync", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of history records to return"
+                },
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Filter by person name",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "Filter by status (completed, failed, in_progress)",
+                  "disabled": true
+                },
+                {
+                  "key": "syncType",
+                  "value": "full",
+                  "description": "Filter by sync type (full, accounts, positions, activities)",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Data Read",
+      "item": [
+        {
+          "name": "Get All Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/accounts?personName=Vivek",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "accounts"],
+              "query": [
+                {
+                  "key": "personName",
+                  "value": "Vivek",
+                  "description": "Filter accounts by person name"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Account by Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/accounts/:accountNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "accounts", ":accountNumber"]
+            }
+          }
+        },
+        {
+          "name": "Get All Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/positions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "positions"]
+            }
+          }
+        },
+        {
+          "name": "Get Positions by Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/positions/account/:accountId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "positions", "account", ":accountId"],
+              "variable": [
+                {
+                  "key": "accountId",
+                  "value": "53413547",
+                  "description": "Account ID (e.g., 53413547)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Activities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/activities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "activities"]
+            }
+          }
+        },
+        {
+          "name": "Get Activities by Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/activities/account/:accountId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "activities", "account", ":accountId"],
+              "variable": [
+                {
+                  "key": "accountId",
+                  "value": "53413547",
+                  "description": "Account ID (e.g., 53413547)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Portfolio Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/data/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Portfolio Analytics",
+      "item": [
+        {
+          "name": "Get Portfolio Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Performance Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "performance"]
+            }
+          }
+        },
+        {
+          "name": "Get Allocation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/allocation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "allocation"]
+            }
+          }
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "analytics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Market Data",
+      "item": [
+        {
+          "name": "Get Market Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Quote",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/quotes/:symbolId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "quotes", ":symbolId"]
+            }
+          }
+        },
+        {
+          "name": "Search Symbols",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/symbols/search?query=AAPL",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "symbols", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "AAPL"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Watchlists",
+      "item": [
+        {
+          "name": "Get All Watchlists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist"]
+            }
+          }
+        },
+        {
+          "name": "Create Watchlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Watchlist\",\n  \"symbols\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist"]
+            }
+          }
+        },
+        {
+          "name": "Update Watchlist",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Watchlist\",\n  \"symbols\": [\"AAPL\", \"MSFT\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Watchlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/watchlist/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watchlist", ":id"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

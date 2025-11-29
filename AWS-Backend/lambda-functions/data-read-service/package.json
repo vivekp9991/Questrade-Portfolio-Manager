@@ -1,0 +1,17 @@
+{
+  "name": "questrade-data-read-service",
+  "version": "1.0.0",
+  "description": "Data Read Service - Read accounts, positions, and activities",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "axios": "^1.13.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import { fetchPersons } from './services/api';
 import { isAuthenticated, logout, getUser } from './utils/auth';
+import questradeWebSocket from './services/questradeWebSocket';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
   const [exchangeRate, setExchangeRate] = createSignal(1.4015);
   const [persons, setPersons] = createSignal([]);
   const [accountFilter, setAccountFilter] = createSignal({ type: 'all', value: null });
+  const [stockTypeFilter, setStockTypeFilter] = createSignal('all');
 
   // Check authentication on mount and set up periodic checks
   onMount(() => {
@@ -34,6 +36,18 @@ function App() {
 
     // Cleanup interval on unmount
     return () => clearInterval(authCheckInterval);
+    // Cleanup WebSocket on window/tab close
+    const handleWindowClose = () => {
+      console.log('[App] 🔌 Disconnecting WebSocket on window close...');
+      questradeWebSocket.disconnect();
+    };
+
+    window.addEventListener('beforeunload', handleWindowClose);
+
+    // Cleanup listener on component unmount
+    onCleanup(() => {
+      window.removeEventListener('beforeunload', handleWindowClose);
+    });
   });
 
   const checkAuth = () => {
@@ -117,7 +131,16 @@ function App() {
     }
   };
 
+  const handleStockTypeChange = (stockType) => {
+    console.log('📊 Stock type filter changed to:', stockType);
+    setStockTypeFilter(stockType);
+  };
+
   const handleLogout = () => {
+    // Disconnect WebSocket before logout
+    console.log('[App] 🔌 Disconnecting WebSocket on logout...');
+    questradeWebSocket.disconnect();
+
     logout();
     setIsLoggedIn(false);
     setActivePage('holdings'); // Reset to default page
@@ -151,6 +174,8 @@ function App() {
             onPersonChange={handlePersonChange}
             onCurrencyChange={handleCurrencyChange}
             onAccountChange={handleAccountChange}
+            stockTypeFilter={stockTypeFilter()}
+            onStockTypeChange={handleStockTypeChange}
             onLogout={handleLogout}
           />
 
@@ -162,6 +187,7 @@ function App() {
                 currencyFilter={currencyFilter}
                 onExchangeRateUpdate={setExchangeRate}
                 accountFilter={accountFilter}
+                stockTypeFilter={stockTypeFilter}
               />
             )}
             {activePage() === 'analysis' && <Analysis />}

@@ -1,0 +1,315 @@
+/**
+ * Master Candle Sync Service
+ * Fetch market data (previousClose, currentPrice, etc.) and update symbols-master table
+ * This is the SINGLE SOURCE OF TRUTH for all market data
+ */
+
+const logger = require('../../shared/utils/logger');
+const { query, scan, batchWrite, putItem, updateItem } = require('../../shared/utils/dynamodb');
+const questradeApi = require('./questradeApiService');
+
+const POSITIONS_TABLE = process.env.POSITIONS_TABLE;
+const SYMBOLS_MASTER_TABLE = process.env.SYMBOLS_MASTER_TABLE;
+const SYNC_HISTORY_TABLE = process.env.SYNC_HISTORY_TABLE;
+
+class MasterCandleSyncService {
+  /**
+   * Get previous day's close and current market data from Questrade Candles API
+   */
+  async getMarketDataFromCandles(personName, symbolId) {
+    try {
+      // Calculate time range: get last 5 days to account for weekends
+      const endTime = new Date();
+      const startTime = new Date();
+      startTime.setDate(startTime.getDate() - 5);
+
+      const startTimeISO = startTime.toISOString();
+      const endTimeISO = endTime.toISOString();
+
+      logger.info(`[MASTER CANDLE] Fetching candles for symbolId ${symbolId}`, {
+        startTime: startTimeISO,
+        endTime: endTimeISO
+      });
+
+      // Call Questrade Candles API
+      const endpoint = `/v1/markets/candles/${symbolId}?startTime=${startTimeISO}&endTime=${endTimeISO}&interval=OneDay`;
+      const data = await questradeApi.makeRequest(personName, endpoint);
+
+      if (!data || !data.candles || data.candles.length === 0) {
+        logger.warn(`[MASTER CANDLE] No candles returned for symbolId ${symbolId}`);
+        return null;
+      }
+
+      const candles = data.candles;
+
+      // Sort candles by end time (descending) to get the most recent first
+      candles.sort((a, b) => new Date(b.end) - new Date(a.end));
+
+      // FIXED: Use simpler logic to get the most recent COMPLETE candle
+      // Strategy: Use the 2nd most recent candle as "previousClose" if we have multiple candles
+      // This avoids timezone issues and ensures we get the last complete trading day
+
+      logger.info(`[MASTER CANDLE] Found ${candles.length} candles for symbolId ${symbolId}`);
+      if (candles.length > 0) {
+        logger.info(`[MASTER CANDLE] Most recent: ${candles[0].end}, close=${candles[0].close}`);
+      }
+      if (candles.length > 1) {
+        logger.info(`[MASTER CANDLE] 2nd recent: ${candles[1].end}, close=${candles[1].close}`);
+      }
+
+      let yesterdayCandle;
+      let todayCandle;
+      let isToday = false;
+
+      if (candles.length >= 2) {
+        // Use 2nd most recent as yesterday's close (most recent might be today's incomplete)
+        yesterdayCandle = candles[1];
+        todayCandle = candles[0];
+        isToday = true;
+        logger.info(`[MASTER CANDLE] Using 2nd candle as previousClose: ${yesterdayCandle.close}`);
+      } else if (candles.length === 1) {
+        // Only one candle - use it as both
+        yesterdayCandle = candles[0];
+        todayCandle = candles[0];
+        isToday = false;
+        logger.info(`[MASTER CANDLE] Only 1 candle, using as previousClose: ${yesterdayCandle.close}`);
+      } else {
+        logger.warn(`[MASTER CANDLE] No candles found for symbolId ${symbolId}`);
+        return null;
+      }
+
+      // Calculate 52-week high/low from all candles
+      let fiftyTwoWeekHigh = 0;
+      let fiftyTwoWeekLow = Infinity;
+      candles.forEach(candle => {
+        if (candle.high > fiftyTwoWeekHigh) fiftyTwoWeekHigh = candle.high;
+        if (candle.low < fiftyTwoWeekLow) fiftyTwoWeekLow = candle.low;
+      });
+
+      // Market data object
+      const marketData = {
+        previousClose: yesterdayCandle.close || 0,
+        previousOpen: yesterdayCandle.open || 0,
+        previousHigh: yesterdayCandle.high || 0,
+        previousLow: yesterdayCandle.low || 0,
+        previousVolume: yesterdayCandle.volume || 0,
+        previousDate: yesterdayCandle.end,
+
+        // If we have today's candle, use it as current; otherwise use yesterday's close
+        currentPrice: isToday ? (todayCandle.close || yesterdayCandle.close) : yesterdayCandle.close,
+        open: isToday ? todayCandle.open : null,
+        high: isToday ? todayCandle.high : null,
+        low: isToday ? todayCandle.low : null,
+        volume: isToday ? todayCandle.volume : null,
+
+        // 52-week high/low (approximation from available candles)
+        fiftyTwoWeekHigh: fiftyTwoWeekHigh > 0 ? fiftyTwoWeekHigh : null,
+        fiftyTwoWeekLow: fiftyTwoWeekLow < Infinity ? fiftyTwoWeekLow : null,
+
+        lastPriceUpdate: Date.now()
+      };
+
+      // Calculate percent change
+      if (marketData.previousClose > 0) {
+        const change = marketData.currentPrice - marketData.previousClose;
+        marketData.change = parseFloat(change.toFixed(4));
+        marketData.percentChange = parseFloat(((change / marketData.previousClose) * 100).toFixed(4));
+      } else {
+        marketData.change = 0;
+        marketData.percentChange = 0;
+      }
+
+      // VALIDATION: Check if previousClose is reasonable
+      // If current price differs from previousClose by more than 20%, flag it
+      const priceDiffPercent = Math.abs(marketData.percentChange);
+      if (priceDiffPercent > 20) {
+        logger.warn(`[MASTER CANDLE] Large price change detected for symbolId ${symbolId}:`, {
+          previousClose: marketData.previousClose,
+          currentPrice: marketData.currentPrice,
+          percentChange: marketData.percentChange
+        });
+        marketData.priceChangeWarning = `Large price movement: ${marketData.percentChange.toFixed(2)}%`;
+      }
+
+      // VALIDATION: Ensure previousClose is positive
+      if (marketData.previousClose <= 0) {
+        logger.warn(`[MASTER CANDLE] Invalid previousClose (${marketData.previousClose}) for symbolId ${symbolId}`);
+        return null;
+      }
+
+      logger.info(`[MASTER CANDLE] Got market data for symbolId ${symbolId}:`, {
+        previousClose: marketData.previousClose,
+        currentPrice: marketData.currentPrice,
+        percentChange: marketData.percentChange,
+        previousDate: yesterdayCandle.end
+      });
+
+      return marketData;
+
+    } catch (error) {
+      logger.error(`[MASTER CANDLE] Error fetching candle for symbolId ${symbolId}:`, {
+        message: error.message,
+        stack: error.stack,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Sync market data to symbols-master table for all unique symbols
+   * This creates a SINGLE SOURCE OF TRUTH
+   */
+  async syncMarketDataToMaster(triggerType = 'MANUAL') {
+    try {
+      logger.info(`[MASTER CANDLE] Starting master candle sync (trigger: ${triggerType})`);
+
+      // Step 1: Get all positions to extract unique symbols
+      const positionsResult = await scan(POSITIONS_TABLE);
+      const positions = positionsResult.items || [];
+
+      if (positions.length === 0) {
+        logger.info('[MASTER CANDLE] No positions found');
+        return {
+          success: true,
+          updated: 0,
+          failed: 0,
+          message: 'No positions to sync'
+        };
+      }
+
+      logger.info(`[MASTER CANDLE] Found ${positions.length} total positions`);
+
+      // Step 2: Extract unique symbols with their symbolId and personName
+      const symbolMap = new Map();
+      positions.forEach(pos => {
+        if (!symbolMap.has(pos.symbol)) {
+          symbolMap.set(pos.symbol, {
+            symbolId: pos.symbolId,
+            personName: pos.personName  // We need any personName for auth
+          });
+        }
+      });
+
+      logger.info(`[MASTER CANDLE] Found ${symbolMap.size} unique symbols to sync`);
+
+      let updated = 0;
+      let failed = 0;
+
+      // Step 3: Fetch market data for each unique symbol and update symbols-master
+      for (const [symbol, data] of symbolMap) {
+        try {
+          const { symbolId, personName } = data;
+
+          logger.info(`[MASTER CANDLE] Processing ${symbol} (symbolId: ${symbolId}, personName: ${personName})`);
+
+          // Get company name from Questrade API (only if not already in symbols-master)
+          let companyName = null;
+          try {
+            const symbolInfo = await questradeApi.getSymbolInfo(personName, symbolId);
+            companyName = symbolInfo?.description || null;
+            logger.info(`[MASTER CANDLE] Fetched company name for ${symbol}: ${companyName}`);
+          } catch (error) {
+            logger.warn(`[MASTER CANDLE] Failed to fetch company name for ${symbol}`, { error: error.message });
+          }
+
+          // Get market data from Questrade Candles API
+          logger.info(`[MASTER CANDLE] Fetching market data for ${symbol} using personName: ${personName}`);
+          const marketData = await this.getMarketDataFromCandles(personName, symbolId);
+          logger.info(`[MASTER CANDLE] Market data result for ${symbol}:`, marketData ? 'SUCCESS' : 'FAILED (null)');
+
+          if (marketData && marketData.previousClose > 0) {
+            // Upsert to symbols-master table with market data (create if not exists, update if exists)
+            const symbolMasterUpdate = {
+              symbol: symbol,
+              symbolId: symbolId,
+              companyName: companyName, // Add company name
+              marketData: marketData,
+              lastMarketDataUpdate: Date.now(),
+              updatedAt: Date.now()
+            };
+
+            await putItem(SYMBOLS_MASTER_TABLE, symbolMasterUpdate);
+
+            // ALSO update positions table with previousClose
+            try {
+              // Query all positions for this symbol using symbol-index GSI
+              const queryResult = await query(
+                POSITIONS_TABLE,
+                'symbol = :symbol',
+                { ':symbol': symbol },
+                { IndexName: 'symbol-index' }
+              );
+              const positions = queryResult.items || [];
+
+              if (positions.length > 0) {
+                // Update all positions with the new previousClose
+                const positionUpdates = positions.map(pos => ({
+                  ...pos,
+                  previousClose: marketData.previousClose,
+                  updatedAt: Date.now()
+                }));
+
+                await batchWrite(POSITIONS_TABLE, positionUpdates, 'put');
+                logger.info(`[MASTER CANDLE] ✅ Updated previousClose in ${positions.length} positions for ${symbol}`);
+              }
+            } catch (error) {
+              logger.warn(`[MASTER CANDLE] ⚠️  Failed to update positions for ${symbol}:`, error.message);
+            }
+
+            updated++;
+            logger.info(`[MASTER CANDLE] ✅ Updated ${symbol} (${companyName || 'Unknown Company'}): prevClose=$${marketData.previousClose}, current=$${marketData.currentPrice}, change=${marketData.percentChange}%`);
+          } else {
+            logger.warn(`[MASTER CANDLE] ⚠️  Skipped ${symbol}: market data not available`);
+            failed++;
+          }
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+        } catch (error) {
+          logger.error(`[MASTER CANDLE] ❌ Failed to update ${symbol}:`, error.message || error);
+          failed++;
+        }
+      }
+
+      logger.info(`[MASTER CANDLE] Completed master sync: ${updated} updated, ${failed} failed`);
+
+      // Write to sync history
+      const now = Date.now();
+      await putItem(SYNC_HISTORY_TABLE, {
+        personName: 'SYSTEM',  // System-level sync
+        syncTimestamp: now,
+        syncType: 'MASTER_CANDLE',
+        triggerType: triggerType,
+        status: 'COMPLETED',
+        duration: `${updated + failed} symbols`,
+        message: `Updated ${updated}, Failed ${failed}`,
+        startTime: now,
+        endTime: now,
+        ttl: Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60) // 90 days
+      });
+
+      return {
+        success: true,
+        updated,
+        failed,
+        total: symbolMap.size,
+        message: `Updated ${updated} symbol(s), ${failed} failed`
+      };
+
+    } catch (error) {
+      logger.error('[MASTER CANDLE] Error syncing market data to master:', error.message || error);
+
+      const safeError = new Error(error.message || 'Failed to sync market data to master');
+      if (error.status) safeError.status = error.status;
+      if (error.statusText) safeError.statusText = error.statusText;
+      if (error.data) safeError.data = error.data;
+
+      throw safeError;
+    }
+  }
+}
+
+module.exports = new MasterCandleSyncService();

@@ -1,0 +1,22 @@
+{
+  "name": "token-refresh-scheduler",
+  "version": "1.0.0",
+  "description": "Scheduled Lambda to refresh Questrade tokens for all active persons",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lambda",
+    "scheduler",
+    "questrade",
+    "tokens"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.511.0",
+    "@aws-sdk/lib-dynamodb": "^3.511.0",
+    "axios": "^1.6.5"
+  }
+}

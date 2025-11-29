@@ -481,7 +481,7 @@ const HoldingsTable = (props) => {
                     {visibleColumns().totalDivReceived && <td class="td-right">{formatDividend(holding().totalDivReceived || 0)}</td>}
                     {visibleColumns().divAdjCost && <td class="td-right">{formatCurrency(holding().divAdjCost || 0)}</td>}
                     {visibleColumns().divAdjYield && <td class="td-right">{formatPercentage(holding().divAdjYield || 0)}</td>}
-                    {visibleColumns().sourceAccounts && <td class="td-right">{holding().sourceAccounts || '-'}</td>}
+                    {visibleColumns().sourceAccounts && <td class="td-right">{Array.isArray(holding().sourceAccounts) ? holding().sourceAccounts.join('; ') : (holding().sourceAccounts || '-')}</td>}
                     {visibleColumns().actions && <td class="td-right">-</td>}
                   </tr>
                 )}

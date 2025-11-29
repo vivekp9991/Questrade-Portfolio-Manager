@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# SAM
+.aws-sam/
+samconfig.toml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AWS
+.aws/
+aws-exports.js
+
+# Build
+dist/
+build/
+*.zip
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+tmp/
+temp/

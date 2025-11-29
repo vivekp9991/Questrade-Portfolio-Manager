@@ -1,10 +1,18 @@
 // Settings API Service - Portfolio Manager V2
 // Backend APIs: Auth (4001), Sync (4002), Portfolio (4003)
-// Using Vite proxy configuration
+// Using Vite proxy configuration for dev, API Gateway for production
 
-const AUTH_API = '/api-auth';    // Proxy to http://localhost:4001
-const SYNC_API = '/api-sync';    // Proxy to http://localhost:4002
-const PORTFOLIO_API = '/api';    // Proxy to http://localhost:4003
+// Get API base URL from environment
+// In production: https://...amazonaws.com/dev/api
+// In dev: /api
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
+// All APIs use the same base in production (AWS API Gateway)
+const AUTH_API = API_BASE;
+const SYNC_API = API_BASE;
+const PORTFOLIO_API = API_BASE;
 
 // Handle API responses
 async function handleResponse(response) {
@@ -100,6 +108,17 @@ export async function refreshToken(personName) {
   return handleResponse(response);
 }
 
+// Update refresh token for a person
+export async function updateRefreshToken(personName, refreshToken) {
+  const url = `${AUTH_API}/auth/setup-person`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ personName, refreshToken })
+  });
+  return handleResponse(response);
+}
+
 // Get access token for a person
 export async function getAccessToken(personName) {
   const url = `${AUTH_API}/auth/access-token/${personName}`;
@@ -132,6 +151,15 @@ export async function syncAll() {
 // Sync specific person
 export async function syncPerson(personName) {
   const url = `${SYNC_API}/sync/person/${personName}`;
+  const response = await fetch(url, {
+    method: 'POST'
+  });
+  return handleResponse(response);
+}
+
+// Sync specific account
+export async function syncAccount(personName, accountNumber) {
+  const url = `${SYNC_API}/sync/account/${personName}/${accountNumber}`;
   const response = await fetch(url, {
     method: 'POST'
   });
@@ -217,67 +245,29 @@ export async function fetchDividendPositions(personName) {
   return handleResponse(response);
 }
 
-// Get YoC exclusions for a person
-export async function fetchYieldExclusions(personName) {
-  const url = `${PORTFOLIO_API}/yield-exclusions/person/${personName}`;
+// Get all YoC exclusions (centralized, not person-specific)
+export async function fetchYieldExclusions() {
+  const url = `${PORTFOLIO_API}/yield-exclusions`;
   const response = await fetch(url);
   return handleResponse(response);
 }
 
 // Add YoC exclusion (exclude from YoC calculation)
-export async function addYieldExclusion(personName, symbol, reason = '') {
-  const url = `${PORTFOLIO_API}/yield-exclusions/person/${personName}`;
+export async function addYieldExclusion(symbol, reason = '') {
+  const url = `${PORTFOLIO_API}/yield-exclusions/${symbol}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol, reason })
+    body: JSON.stringify({ reason })
   });
   return handleResponse(response);
 }
 
 // Remove YoC exclusion (include in YoC calculation)
-export async function removeYieldExclusion(personName, symbol) {
-  const url = `${PORTFOLIO_API}/yield-exclusions/person/${personName}/${symbol}`;
+export async function removeYieldExclusion(symbol) {
+  const url = `${PORTFOLIO_API}/yield-exclusions/${symbol}`;
   const response = await fetch(url, {
     method: 'DELETE'
-  });
-  return handleResponse(response);
-}
-
-// Get dividend overrides for a person
-export async function fetchDividendOverrides(personName) {
-  const url = `${PORTFOLIO_API}/dividend-overrides/person/${personName}`;
-  const response = await fetch(url);
-  return handleResponse(response);
-}
-
-// Set dividend override for a symbol
-export async function setDividendOverride(personName, symbol, overrideData) {
-  const url = `${PORTFOLIO_API}/dividend-overrides/person/${personName}/${symbol}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(overrideData)
-  });
-  return handleResponse(response);
-}
-
-// Remove dividend override
-export async function removeDividendOverride(personName, symbol) {
-  const url = `${PORTFOLIO_API}/dividend-overrides/person/${personName}/${symbol}`;
-  const response = await fetch(url, {
-    method: 'DELETE'
-  });
-  return handleResponse(response);
-}
-
-// Bulk update dividend overrides
-export async function bulkUpdateDividendOverrides(personName, overrides) {
-  const url = `${PORTFOLIO_API}/dividend-overrides/person/${personName}/bulk`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ overrides })
   });
   return handleResponse(response);
 }
@@ -346,21 +336,21 @@ export async function resetSymbolDividendOverride(symbol) {
 
 // Check Auth API health
 export async function checkAuthHealth() {
-  const url = `${AUTH_API}/api/health`;
+  const url = `${AUTH_API}/health`;
   const response = await fetch(url);
   return handleResponse(response);
 }
 
 // Check Sync API health
 export async function checkSyncHealth() {
-  const url = `${SYNC_API}/api/health`;
+  const url = `${SYNC_API}/health`;
   const response = await fetch(url);
   return handleResponse(response);
 }
 
 // Check Portfolio API health
 export async function checkPortfolioHealth() {
-  const url = `${PORTFOLIO_API}/api/health`;
+  const url = `${PORTFOLIO_API}/health`;
   const response = await fetch(url);
   return handleResponse(response);
 }
@@ -412,5 +402,31 @@ export async function fetchAccountsDropdown() {
 export async function fetchAccountSummary(personName) {
   const url = `${SYNC_API}/accounts/summary/${personName}`;
   const response = await fetch(url);
+  return handleResponse(response);
+}
+
+// ============================================
+// QUESTRADE DIVIDEND SYNC
+// ============================================
+
+// Sync dividend data from Questrade API
+export async function syncQuestradeDividends() {
+  const url = `${SYNC_API}/sync/questrade-dividends`;
+  const response = await fetch(url, {
+    method: 'POST'
+  });
+  return handleResponse(response);
+}
+
+// Sync master candles (centralized previousClose for all symbols)
+export async function syncMasterCandles() {
+  const url = `${SYNC_API}/sync/master-candles`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ triggerType: 'MANUAL' })
+  });
   return handleResponse(response);
 }

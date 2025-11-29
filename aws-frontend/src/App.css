@@ -1,0 +1,41 @@
+/* App Layout */
+.app {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.page-container {
+  flex: 1;
+  overflow: auto;
+  width: 100%;
+}
+
+/* Placeholder Page */
+.placeholder-page {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.placeholder-page h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.placeholder-page p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}

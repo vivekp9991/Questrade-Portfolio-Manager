@@ -34,7 +34,7 @@ const DividendManager = (props) => {
   const unsavedChanges = () => Object.keys(changes()).length;
 
   // Dividend frequencies
-  const frequencies = ['Monthly', 'Semi-Monthly', 'Quarterly', 'Semi-Annual', 'Annual', 'Unknown'];
+  const frequencies = ['Monthly', 'Semi-Monthly', 'Quarterly', 'Semi-Annual', 'Annual', 'No Dividend', 'Unknown'];
 
   // Convert frontend frequency format to backend format
   const toBackendFrequency = (frontendFreq) => {
@@ -44,6 +44,7 @@ const DividendManager = (props) => {
       'Quarterly': 'quarterly',
       'Semi-Annual': 'semi-annual',
       'Annual': 'annual',
+      'No Dividend': 'none',
       'Unknown': 'unknown'
     };
     return mapping[frontendFreq] || 'unknown';
@@ -57,8 +58,8 @@ const DividendManager = (props) => {
       'quarterly': 'Quarterly',
       'semi-annual': 'Semi-Annual',
       'annual': 'Annual',
-      'unknown': 'Unknown',
-      'none': 'Unknown'
+      'none': 'No Dividend',
+      'unknown': 'Unknown'
     };
     return mapping[backendFreq] || 'Unknown';
   };
@@ -74,7 +75,7 @@ const DividendManager = (props) => {
       setLoading(true);
       const [positionsData, exclusionsData, symbolDividendsData] = await Promise.all([
         settingsApi.fetchDividendPositions(props.selectedPerson),
-        settingsApi.fetchYieldExclusions(props.selectedPerson),
+        settingsApi.fetchYieldExclusions(), // Centralized, not person-specific
         settingsApi.fetchAllSymbolDividends() // Load centralized symbol dividend data
       ]);
 
@@ -91,7 +92,33 @@ const DividendManager = (props) => {
     }
   };
 
-  // Auto-load on mount and when person changes
+  // Sync dividend data from Questrade
+  const handleSyncDividends = async () => {
+    try {
+      setLoading(true);
+      props.showMessage?.('Syncing dividend data from Questrade...', 'info');
+
+      await settingsApi.syncQuestradeDividends();
+
+      props.showMessage?.('Dividend data synced successfully from Questrade', 'success');
+
+      // Reload positions to reflect updated data
+      await loadPositions();
+    } catch (error) {
+      props.showMessage?.(`Failed to sync dividends: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-load on mount
+  onMount(() => {
+    if (props.selectedPerson) {
+      loadPositions();
+    }
+  });
+
+  // Auto-load when person changes
   createEffect(() => {
     if (props.selectedPerson) {
       loadPositions();
@@ -116,11 +143,10 @@ const DividendManager = (props) => {
 
   const handleOverrideChange = (symbol, value) => {
     const changeKey = `${symbol}_override`;
-    const symbolData = symbolDividends().find(s => s.symbol === symbol);
-    const originalValue = symbolData?.monthlyDividendPerShare ? (symbolData.monthlyDividendPerShare * 12).toFixed(4) : '';
 
-    if (value === originalValue || (value === '' && !originalValue)) {
-      // Reverting to original, remove from changes
+    // Always track the change when user enters a value
+    if (value === '' || value === null || value === undefined) {
+      // Empty value - remove from changes
       const newChanges = { ...changes() };
       delete newChanges[changeKey];
       setChanges(newChanges);
@@ -131,18 +157,10 @@ const DividendManager = (props) => {
 
   const handleFrequencyChange = (symbol, frequency) => {
     const changeKey = `${symbol}_frequency`;
-    const symbolData = symbolDividends().find(s => s.symbol === symbol);
-    const backendFreq = symbolData?.dividendFrequency;
-    const originalValue = toFrontendFrequency(backendFreq) || 'Unknown';
 
-    if (frequency === originalValue) {
-      // Reverting to original, remove from changes
-      const newChanges = { ...changes() };
-      delete newChanges[changeKey];
-      setChanges(newChanges);
-    } else {
-      setChanges({ ...changes(), [changeKey]: frequency });
-    }
+    // Always track the change when user selects a frequency
+    // We'll let the backend determine if it's actually different from the original
+    setChanges({ ...changes(), [changeKey]: frequency });
   };
 
   // Get display value
@@ -161,8 +179,16 @@ const DividendManager = (props) => {
     }
     const symbolData = symbolDividends().find(s => s.symbol === symbol);
     // Only return override value if it's a manual override
-    if (symbolData?.isManualOverride && symbolData?.monthlyDividendPerShare) {
-      return (symbolData.monthlyDividendPerShare * 12).toFixed(4);
+    // Handle isManualOverride being either boolean true or string "true"
+    const isOverride = symbolData?.isManualOverride === true || symbolData?.isManualOverride === 'true';
+
+    if (isOverride) {
+      // Try overrideValue first (some records), then monthlyDividendPerShare
+      const monthlyValue = symbolData.overrideValue || symbolData.monthlyDividendPerShare;
+      if (monthlyValue && monthlyValue > 0) {
+        // Return monthly value as-is (user enters monthly, not annual)
+        return monthlyValue.toFixed(4);
+      }
     }
     return '';
   };
@@ -202,24 +228,23 @@ const DividendManager = (props) => {
         if ('include' in changeTypes) {
           if (changeTypes.include) {
             // Include in YoC - remove from exclusions
-            await settingsApi.removeYieldExclusion(props.selectedPerson, symbol);
+            await settingsApi.removeYieldExclusion(symbol);
           } else {
             // Exclude from YoC
-            await settingsApi.addYieldExclusion(props.selectedPerson, symbol, 'User excluded');
+            await settingsApi.addYieldExclusion(symbol, 'User excluded');
           }
         }
 
         // Handle dividend data changes (override or frequency)
         if ('override' in changeTypes || 'frequency' in changeTypes) {
-          const annualDividend = changeTypes.override !== undefined
+          // User enters MONTHLY dividend, not annual
+          const monthlyDividendPerShare = changeTypes.override !== undefined
             ? parseFloat(changeTypes.override) || 0
             : parseFloat(getOverrideValue(symbol)) || 0;
 
           const frequency = changeTypes.frequency !== undefined
             ? changeTypes.frequency
             : getFrequencyValue(symbol);
-
-          const monthlyDividendPerShare = annualDividend / 12;
 
           // Save to centralized SymbolDividend table
           await settingsApi.setSymbolDividend(symbol, {
@@ -343,6 +368,34 @@ const DividendManager = (props) => {
     return sortDirection() === 'asc' ? '↑' : '↓';
   };
 
+  // Copy symbol to clipboard
+  const copySymbolToClipboard = (symbol) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(symbol).then(() => {
+        props.showMessage?.(`Copied ${symbol} to clipboard`, 'success');
+      }).catch((err) => {
+        console.error('Failed to copy:', err);
+        props.showMessage?.(`Failed to copy ${symbol}`, 'error');
+      });
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = symbol;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        props.showMessage?.(`Copied ${symbol} to clipboard`, 'success');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+        props.showMessage?.(`Failed to copy ${symbol}`, 'error');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   return (
     <div class="dividend-manager">
       {/* Statistics Cards */}
@@ -404,6 +457,9 @@ const DividendManager = (props) => {
           </Show>
           <button class="btn btn-refresh" onClick={loadPositions} disabled={loading()}>
             REFRESH
+          </button>
+          <button class="btn btn-primary" onClick={handleSyncDividends} disabled={loading()}>
+            SYNC DIVIDENDS
           </button>
         </div>
       </div>
@@ -472,7 +528,14 @@ const DividendManager = (props) => {
                           class="checkbox-input"
                         />
                       </td>
-                      <td class="mono-text symbol-cell">{position.symbol}</td>
+                      <td
+                        class="mono-text symbol-cell"
+                        onClick={() => copySymbolToClipboard(position.symbol)}
+                        style="cursor: pointer; user-select: none;"
+                        title="Click to copy"
+                      >
+                        {position.symbol}
+                      </td>
                       <td>
                         <select
                           class="frequency-select"
@@ -497,6 +560,51 @@ const DividendManager = (props) => {
                             onChange={(e) => handleOverrideChange(position.symbol, e.target.value)}
                             placeholder="0.00"
                           />
+                          <Show when={changes()[`${position.symbol}_override`] || changes()[`${position.symbol}_frequency`]}>
+                            <button
+                              class="btn-save-row"
+                              onClick={async () => {
+                                try {
+                                  setLoading(true);
+
+                                  const overrideChange = changes()[`${position.symbol}_override`];
+                                  const frequencyChange = changes()[`${position.symbol}_frequency`];
+
+                                  // User enters MONTHLY dividend, not annual
+                                  const monthlyDividendPerShare = overrideChange !== undefined
+                                    ? parseFloat(overrideChange) || 0
+                                    : parseFloat(getOverrideValue(position.symbol)) || 0;
+
+                                  const frequency = frequencyChange !== undefined
+                                    ? frequencyChange
+                                    : getFrequencyValue(position.symbol);
+
+                                  await settingsApi.setSymbolDividend(position.symbol, {
+                                    dividendFrequency: toBackendFrequency(frequency),
+                                    monthlyDividendPerShare,
+                                    isManualOverride: true
+                                  });
+
+                                  // Remove from changes
+                                  const newChanges = { ...changes() };
+                                  delete newChanges[`${position.symbol}_override`];
+                                  delete newChanges[`${position.symbol}_frequency`];
+                                  setChanges(newChanges);
+
+                                  props.showMessage?.('Override saved successfully', 'success');
+                                  await loadPositions();
+                                } catch (error) {
+                                  props.showMessage?.(`Failed to save override: ${error.message}`, 'error');
+                                } finally {
+                                  setLoading(false);
+                                }
+                              }}
+                              disabled={loading()}
+                              title="Save override for this symbol"
+                            >
+                              💾
+                            </button>
+                          </Show>
                           <Show when={hasOverride}>
                             <span class="override-badge">OVERRIDE</span>
                           </Show>

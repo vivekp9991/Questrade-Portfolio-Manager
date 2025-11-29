@@ -1,6 +1,13 @@
 import { createSignal } from 'solid-js';
 import '../pages/Login.css';
 
+// Get API base URL from environment
+// In production: https://...amazonaws.com/dev/api
+// In dev: /api
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
 function Login(props) {
   const [username, setUsername] = createSignal('');
   const [password, setPassword] = createSignal('');
@@ -13,7 +20,7 @@ function Login(props) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

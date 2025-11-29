@@ -1,0 +1,20 @@
+{
+  "name": "daily-sync-scheduler",
+  "version": "1.0.0",
+  "description": "Scheduled Lambda to trigger daily sync operations (PREV_CLOSE) for all active persons",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lambda",
+    "scheduler",
+    "questrade",
+    "sync"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.0.0"
+  }
+}
