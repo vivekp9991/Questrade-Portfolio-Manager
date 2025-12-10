@@ -9,6 +9,7 @@ const { handleError } = require('../shared/utils/response');
 // Import handlers
 const symbolDividendHandlers = require('./handlers/symbolDividends');
 const yieldExclusionHandlers = require('./handlers/yieldExclusions');
+const symbolCategoryHandlers = require('./handlers/symbolCategories');
 
 /**
  * Main Lambda handler
@@ -25,6 +26,21 @@ exports.handler = async (event) => {
 
     // Remove stage prefix if present
     const path = rawPath.replace(/^\/[^\/]+\/api\//, '/api/');
+
+    // Handle OPTIONS preflight requests for CORS
+    if (method === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true'
+        },
+        body: JSON.stringify({ success: true })
+      };
+    }
 
     // ==================== Symbol Dividends Routes ====================
 
@@ -78,6 +94,38 @@ exports.handler = async (event) => {
     // DELETE /api/yield-exclusions/:symbol - Remove exclusion
     if (path.match(/^\/api\/yield-exclusions\/[^\/]+$/) && method === 'DELETE') {
       return await yieldExclusionHandlers.removeYieldExclusion(event);
+    }
+
+    // ==================== Symbol Categories Routes ====================
+
+    // GET /api/symbol-categories - Get all categories
+    if (path === '/api/symbol-categories' && method === 'GET') {
+      return await symbolCategoryHandlers.getAllSymbolCategories(event);
+    }
+
+    // GET /api/category-options - Get available options
+    if (path === '/api/category-options' && method === 'GET') {
+      return await symbolCategoryHandlers.getCategoryOptions(event);
+    }
+
+    // POST /api/symbol-categories/bulk - Bulk update categories
+    if (path === '/api/symbol-categories/bulk' && method === 'POST') {
+      return await symbolCategoryHandlers.bulkUpdateSymbolCategories(event);
+    }
+
+    // GET /api/symbol-categories/:symbol
+    if (path.match(/^\/api\/symbol-categories\/[^\/]+$/) && method === 'GET') {
+      return await symbolCategoryHandlers.getSymbolCategory(event);
+    }
+
+    // POST /api/symbol-categories/:symbol
+    if (path.match(/^\/api\/symbol-categories\/[^\/]+$/) && method === 'POST') {
+      return await symbolCategoryHandlers.setSymbolCategory(event);
+    }
+
+    // DELETE /api/symbol-categories/:symbol
+    if (path.match(/^\/api\/symbol-categories\/[^\/]+$/) && method === 'DELETE') {
+      return await symbolCategoryHandlers.deleteSymbolCategory(event);
     }
 
     // Route not found

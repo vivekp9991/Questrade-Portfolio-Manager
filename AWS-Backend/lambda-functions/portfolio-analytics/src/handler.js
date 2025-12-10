@@ -17,6 +17,7 @@ const exchangeRateHandlers = require('./handlers/exchangeRate');
 const positionsHandlers = require('./handlers/positions');
 const cashBalancesHandlers = require('./handlers/cashBalances');
 const marketDataHandlers = require('./handlers/marketData');
+const portfolioAnalysisHandlers = require('./handlers/portfolioAnalysis');
 
 /**
  * Main Lambda handler
@@ -33,6 +34,21 @@ exports.handler = async (event) => {
 
     // Remove stage prefix if present (e.g., /dev/api/... -> /api/...)
     const path = rawPath.replace(/^\/[^\/]+\/api\//, '/api/');
+
+    // Handle OPTIONS preflight requests for CORS
+    if (method === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': 'true'
+        },
+        body: JSON.stringify({ success: true })
+      };
+    }
 
     // Health check
     if (path === '/api/portfolio/health' && method === 'GET') {
@@ -61,6 +77,11 @@ exports.handler = async (event) => {
     // Cash balances route (check BEFORE portfolio routes to avoid regex collision)
     if (path === '/api/portfolio/cash-balances' && method === 'GET') {
       return await cashBalancesHandlers.getCashBalances(event);
+    }
+
+    // Portfolio analysis route (for Dividend Analysis page charts)
+    if (path === '/api/portfolio/analysis' && method === 'GET') {
+      return await portfolioAnalysisHandlers.getPortfolioAnalysis(event);
     }
 
     // Market data routes (SINGLE SOURCE OF TRUTH from symbols-master)

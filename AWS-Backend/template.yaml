@@ -38,6 +38,8 @@ Globals:
           Ref: YieldExclusionsTable
         SYMBOLS_MASTER_TABLE:
           Ref: SymbolsMasterTable
+        SYMBOL_CATEGORIES_TABLE:
+          Ref: SymbolCategoriesTable
         CACHE_TABLE:
           Ref: CacheTable
         JWT_SECRET:
@@ -692,6 +694,13 @@ Resources:
               Ref: QuestradeApi
             Path: /api/portfolio/cash-balances
             Method: GET
+        GetPortfolioAnalysis:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/analysis
+            Method: GET
     Metadata:
       SamResourceId: PortfolioAnalyticsFunction
   MarketDataServiceFunction:
@@ -855,6 +864,9 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: YieldExclusionsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolCategoriesTable
       Events:
         GetAllSymbolDividends:
           Type: HttpApi
@@ -926,6 +938,48 @@ Resources:
               Ref: QuestradeApi
             Path: /api/yield-exclusions/{symbol}
             Method: DELETE
+        GetAllSymbolCategories:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories
+            Method: GET
+        GetSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: GET
+        SetSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: POST
+        DeleteSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: DELETE
+        BulkUpdateSymbolCategories:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/bulk
+            Method: POST
+        GetCategoryOptions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/category-options
+            Method: GET
     Metadata:
       SamResourceId: DividendManagementFunction
   TokenRefreshSchedulerFunction:
@@ -1365,6 +1419,27 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
+  SymbolCategoriesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-symbol-categories-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: symbol
+        AttributeType: S
+      - AttributeName: symbolType
+        AttributeType: S
+      KeySchema:
+      - AttributeName: symbol
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: symbolType-index
+        KeySchema:
+        - AttributeName: symbolType
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL

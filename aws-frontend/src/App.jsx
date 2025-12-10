@@ -2,7 +2,7 @@ import { createSignal, onMount, Show } from 'solid-js';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import Holdings from './pages/Holdings';
-import Analysis from './pages/Analysis';
+import DividendAnalysis from './pages/DividendAnalysis';
 import Backtesting from './pages/Backtesting';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -223,7 +223,14 @@ function App() {
                 stockTypeFilter={stockTypeFilter}
               />
             )}
-            {activePage() === 'analysis' && <Analysis />}
+            {activePage() === 'dividend-analysis' && (
+              <DividendAnalysis
+                selectedPerson={selectedPerson()}
+                selectedCurrency={selectedCurrency()}
+                currencyFilter={currencyFilter}
+                accountFilter={accountFilter}
+              />
+            )}
             {activePage() === 'backtesting' && <Backtesting />}
             {activePage() === 'settings' && <Settings />}
           </div>

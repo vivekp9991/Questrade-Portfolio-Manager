@@ -8,7 +8,7 @@ export default function Sidebar(props) {
 
   const navItems = [
     { id: 'holdings', label: 'Holdings', icon: '📊' },
-    { id: 'analysis', label: 'Analysis', icon: '📈' },
+    { id: 'dividend-analysis', label: 'Dividend Analysis', icon: '📈' },
     { id: 'backtesting', label: 'Backtesting', icon: '🔄' },
     { id: 'settings', label: 'Settings', icon: '⚙️' }
   ];

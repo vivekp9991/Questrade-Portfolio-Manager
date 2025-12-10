@@ -13,6 +13,10 @@ const DividendManager = (props) => {
   const [exclusions, setExclusions] = createSignal([]);
   const [symbolDividends, setSymbolDividends] = createSignal([]); // Centralized symbol dividend data
 
+  // Symbol Categories
+  const [symbolCategories, setSymbolCategories] = createSignal({}); // Map of symbol -> category data
+  const [categoryOptions, setCategoryOptions] = createSignal({ types: [], subTypes: {} });
+
   // Pagination
   const [currentPage, setCurrentPage] = createSignal(1);
   const [itemsPerPage, setItemsPerPage] = createSignal(10);
@@ -84,15 +88,18 @@ const DividendManager = (props) => {
     }
   };
 
-  // Load positions (using default person: Vivek)
+  // Load all unique symbols across all persons (for symbol-level management)
   const loadPositions = async () => {
     try {
       setLoading(true);
-      const personName = 'Vivek'; // Default person for dividend management
-      const [positionsData, exclusionsData, symbolDividendsData] = await Promise.all([
-        settingsApi.fetchDividendPositions(personName),
+      // Fetch ALL unique symbols aggregated across all persons
+      // This ensures Dividend Manager shows every symbol in the portfolio, regardless of which person owns it
+      const [positionsData, exclusionsData, symbolDividendsData, categoriesData, categoryOptionsData] = await Promise.all([
+        settingsApi.fetchAllUniqueSymbols(), // Get all unique symbols across ALL persons
         settingsApi.fetchYieldExclusions(), // GLOBAL - no personName needed
-        settingsApi.fetchAllSymbolDividends() // Load centralized symbol dividend data
+        settingsApi.fetchAllSymbolDividends(), // Load centralized symbol dividend data
+        settingsApi.fetchAllSymbolCategories().catch(() => []), // Load symbol categories
+        settingsApi.fetchCategoryOptions().catch(() => ({ types: [], subTypes: {} })) // Load category options
       ]);
 
       setPositions(Array.isArray(positionsData) ? positionsData : []);
@@ -100,6 +107,22 @@ const DividendManager = (props) => {
       setExclusions(Array.isArray(exclusionsData) ? exclusionsData.map(e => e.symbol) : []);
       setSymbolDividends(Array.isArray(symbolDividendsData) ? symbolDividendsData : []);
       console.log('[DIVIDEND] Loaded symbol dividends:', symbolDividendsData);
+
+      // Build categories map
+      const categoriesMap = {};
+      (Array.isArray(categoriesData) ? categoriesData : []).forEach(cat => {
+        categoriesMap[cat.symbol] = cat;
+      });
+      setSymbolCategories(categoriesMap);
+      console.log('[DIVIDEND] Loaded symbol categories:', categoriesMap);
+
+      // Set category options (API returns symbolTypes, not types)
+      const normalizedOptions = {
+        types: categoryOptionsData?.symbolTypes || categoryOptionsData?.types || [],
+        subTypes: categoryOptionsData?.subTypes || {}
+      };
+      setCategoryOptions(normalizedOptions);
+      console.log('[DIVIDEND] Loaded category options:', normalizedOptions);
 
       // Debug: Check if manual overrides are loaded
       const overrides = symbolDividendsData.filter(s => s.isManualOverride === 'true' || s.isManualOverride === true);
@@ -163,6 +186,68 @@ const DividendManager = (props) => {
     } else {
       setChanges({ ...changes(), [changeKey]: frequency });
     }
+  };
+
+  // Handle Symbol Type change - track in changes for batch save
+  const handleSymbolTypeChange = (symbol, newType) => {
+    const typeChangeKey = `${symbol}_symbolType`;
+    const subTypeChangeKey = `${symbol}_symbolSubType`;
+    const originalType = symbolCategories()[symbol]?.symbolType || '';
+
+    if (newType === originalType) {
+      // Reverting to original, remove from changes
+      const newChanges = { ...changes() };
+      delete newChanges[typeChangeKey];
+      delete newChanges[subTypeChangeKey]; // Also clear sub-type when reverting type
+      setChanges(newChanges);
+    } else {
+      // When type changes, reset subType since sub-types are conditional
+      setChanges({
+        ...changes(),
+        [typeChangeKey]: newType,
+        [subTypeChangeKey]: '' // Reset sub-type when type changes
+      });
+    }
+  };
+
+  // Handle Sub-Type change - track in changes for batch save
+  const handleSubTypeChange = (symbol, newSubType) => {
+    const changeKey = `${symbol}_symbolSubType`;
+    const originalSubType = symbolCategories()[symbol]?.symbolSubType || '';
+
+    if (newSubType === originalSubType) {
+      // Reverting to original, remove from changes
+      const newChanges = { ...changes() };
+      delete newChanges[changeKey];
+      setChanges(newChanges);
+    } else {
+      setChanges({ ...changes(), [changeKey]: newSubType });
+    }
+  };
+
+  // Get symbol type value (check pending changes first)
+  const getSymbolType = (symbol) => {
+    const changeKey = `${symbol}_symbolType`;
+    if (changeKey in changes()) {
+      return changes()[changeKey];
+    }
+    return symbolCategories()[symbol]?.symbolType || '';
+  };
+
+  // Get symbol sub-type value (check pending changes first)
+  const getSymbolSubType = (symbol) => {
+    const changeKey = `${symbol}_symbolSubType`;
+    if (changeKey in changes()) {
+      return changes()[changeKey];
+    }
+    return symbolCategories()[symbol]?.symbolSubType || '';
+  };
+
+  // Get sub-type options based on selected type
+  const getSubTypeOptions = (type) => {
+    if (!type) return [];
+    const subTypes = categoryOptions().subTypes || {};
+    return subTypes[type] || [];
   };
 
   // Get display value
@@ -253,6 +338,23 @@ const DividendManager = (props) => {
             isManualOverride: annualDividend > 0 // Only set override if value > 0
           });
         }
+
+        // Handle symbol category changes (symbolType or symbolSubType)
+        if ('symbolType' in changeTypes || 'symbolSubType' in changeTypes) {
+          const currentCategory = symbolCategories()[symbol] || {};
+          const symbolType = changeTypes.symbolType !== undefined
+            ? changeTypes.symbolType
+            : currentCategory.symbolType || '';
+          const symbolSubType = changeTypes.symbolSubType !== undefined
+            ? changeTypes.symbolSubType
+            : currentCategory.symbolSubType || '';
+
+          // Save to symbol-categories table
+          await settingsApi.setSymbolCategory(symbol, {
+            symbolType,
+            symbolSubType
+          });
+        }
       }
 
       // Show success message
@@ -312,6 +414,14 @@ const DividendManager = (props) => {
         case 'symbol':
           aVal = a.symbol || '';
           bVal = b.symbol || '';
+          break;
+        case 'symbolType':
+          aVal = getSymbolType(a.symbol) || 'zzz'; // Sort empty to end
+          bVal = getSymbolType(b.symbol) || 'zzz';
+          break;
+        case 'subType':
+          aVal = getSymbolSubType(a.symbol) || 'zzz'; // Sort empty to end
+          bVal = getSymbolSubType(b.symbol) || 'zzz';
           break;
         case 'frequency':
           aVal = getFrequencyValue(a.symbol);
@@ -493,6 +603,12 @@ const DividendManager = (props) => {
               <th class="sortable" onClick={() => handleSort('symbol')}>
                 SYMBOL <span class="sort-icon">{getSortIcon('symbol')}</span>
               </th>
+              <th class="sortable" onClick={() => handleSort('symbolType')}>
+                SYMBOL TYPE <span class="sort-icon">{getSortIcon('symbolType')}</span>
+              </th>
+              <th class="sortable" onClick={() => handleSort('subType')}>
+                SUB-TYPE <span class="sort-icon">{getSortIcon('subType')}</span>
+              </th>
               <th class="sortable" onClick={() => handleSort('frequency')}>
                 DIV FREQUENCY <span class="sort-icon">{getSortIcon('frequency')}</span>
               </th>
@@ -511,7 +627,7 @@ const DividendManager = (props) => {
           <tbody>
             <Show when={filteredPositions().length > 0} fallback={
               <tr>
-                <td colspan="7" class="empty-state">
+                <td colspan="9" class="empty-state">
                   {loading() ? 'Loading positions...' : 'No positions found. Click REFRESH to load.'}
                 </td>
               </tr>
@@ -546,6 +662,31 @@ const DividendManager = (props) => {
                         />
                       </td>
                       <td class="mono-text symbol-cell" onClick={() => copySymbolToClipboard(position.symbol)} style="cursor: pointer; user-select: none;" title="Click to copy">{position.symbol}</td>
+                      <td>
+                        <select
+                          class="category-select"
+                          value={getSymbolType(position.symbol)}
+                          onChange={(e) => handleSymbolTypeChange(position.symbol, e.target.value)}
+                        >
+                          <option value="">Select Type...</option>
+                          <For each={categoryOptions().types || []}>
+                            {(type) => <option value={type.value}>{type.label}</option>}
+                          </For>
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          class="category-select"
+                          value={getSymbolSubType(position.symbol)}
+                          onChange={(e) => handleSubTypeChange(position.symbol, e.target.value)}
+                          disabled={!getSymbolType(position.symbol)}
+                        >
+                          <option value="">Select Sub-Type...</option>
+                          <For each={getSubTypeOptions(getSymbolType(position.symbol))}>
+                            {(subType) => <option value={subType.value}>{subType.label}</option>}
+                          </For>
+                        </select>
+                      </td>
                       <td>
                         <select
                           class="frequency-select"

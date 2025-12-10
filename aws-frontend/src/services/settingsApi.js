@@ -260,9 +260,17 @@ export async function fetchSyncHistory(limit = 50) {
 // DIVIDEND MANAGER
 // ============================================
 
-// Get all positions with dividend data
+// Get all positions with dividend data for a specific person
 export async function fetchDividendPositions(personName) {
   const url = `${PORTFOLIO_API}/portfolio/positions?viewMode=person&personName=${personName}`;
+  const response = await fetch(url);
+  return handleResponse(response);
+}
+
+// Get all unique symbols across all persons (aggregated by symbol)
+// Used by Dividend Manager for symbol-level management
+export async function fetchAllUniqueSymbols() {
+  const url = `${PORTFOLIO_API}/portfolio/positions?viewMode=all&aggregate=true`;
   const response = await fetch(url);
   return handleResponse(response);
 }
@@ -476,6 +484,62 @@ export async function syncQuestradeDividends() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ triggerType: 'MANUAL' })
+  });
+  return handleResponse(response);
+}
+
+// ============================================
+// SYMBOL CATEGORIES
+// ============================================
+
+// Get all symbol categories
+export async function fetchAllSymbolCategories() {
+  const url = `${PORTFOLIO_API}/symbol-categories`;
+  const response = await fetch(url);
+  return handleResponse(response);
+}
+
+// Get category options (types, subtypes, sectors)
+export async function fetchCategoryOptions() {
+  const url = `${PORTFOLIO_API}/category-options`;
+  const response = await fetch(url);
+  return handleResponse(response);
+}
+
+// Get category for a specific symbol
+export async function fetchSymbolCategory(symbol) {
+  const url = `${PORTFOLIO_API}/symbol-categories/${symbol}`;
+  const response = await fetch(url);
+  return handleResponse(response);
+}
+
+// Set/update category for a symbol
+export async function setSymbolCategory(symbol, categoryData) {
+  const url = `${PORTFOLIO_API}/symbol-categories/${symbol}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(categoryData)
+  });
+  return handleResponse(response);
+}
+
+// Delete category for a symbol
+export async function deleteSymbolCategory(symbol) {
+  const url = `${PORTFOLIO_API}/symbol-categories/${symbol}`;
+  const response = await fetch(url, {
+    method: 'DELETE'
+  });
+  return handleResponse(response);
+}
+
+// Bulk update symbol categories
+export async function bulkUpdateSymbolCategories(categories) {
+  const url = `${PORTFOLIO_API}/symbol-categories/bulk`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ categories })
   });
   return handleResponse(response);
 }

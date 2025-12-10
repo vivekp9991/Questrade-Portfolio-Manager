@@ -1,0 +1,193 @@
+.donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.donut-chart-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.donut-chart {
+  transform: rotate(0deg);
+}
+
+.donut-segment {
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.donut-segment:hover {
+  opacity: 0.8;
+}
+
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.donut-center-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #f0f6fc;
+}
+
+.donut-center-label {
+  font-size: 12px;
+  color: #8b949e;
+  margin-top: 4px;
+}
+
+/* Horizontal layout - chart left, legend right */
+.donut-horizontal {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 30px;
+  width: 100%;
+}
+
+.donut-horizontal .donut-chart-wrapper {
+  flex-shrink: 0;
+}
+
+.donut-horizontal .donut-legend {
+  max-width: none;
+  width: auto;
+  flex: 1;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Legend styles */
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 200px;
+}
+
+/* Grid legend for multiple columns */
+.donut-legend-grid {
+  display: grid;
+  gap: 8px 20px;
+  max-width: none;
+}
+
+.donut-legend-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.donut-legend-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid #21262d;
+}
+
+.donut-legend-grid .legend-item {
+  border-bottom: none;
+  padding: 3px 0;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.legend-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  max-width: 120px;
+}
+
+.legend-label {
+  color: #f0f6fc;
+  font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-sublabel {
+  color: #6b7280;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+  max-width: 100%;
+}
+
+.legend-values {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.legend-value {
+  color: #f0f6fc;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.legend-percent {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .donut-horizontal {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .donut-legend-cols-2 {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .donut-center-value {
+    font-size: 20px;
+  }
+
+  .donut-center-label {
+    font-size: 10px;
+  }
+
+  .legend-item {
+    font-size: 11px;
+  }
+
+  .donut-legend-cols-2,
+  .donut-legend-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}

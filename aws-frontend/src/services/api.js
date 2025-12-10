@@ -220,6 +220,103 @@ export async function runBacktest(payload) {
   return await response.json();
 }
 
+// ==================== Portfolio Analysis ====================
+
+/**
+ * Fetch portfolio analysis data for charts
+ * Maps to: GET /api/portfolio/analysis
+ * @param {string} personName - Person name or 'all' for all persons
+ * @param {string} viewMode - 'investment' or 'market'
+ * @param {string|null} accountId - Optional account ID for account-level filtering
+ */
+export async function fetchPortfolioAnalysis(personName = 'all', viewMode = 'investment', accountId = null) {
+  console.log(`[API] Fetching portfolio analysis for ${personName}${accountId ? ` (account: ${accountId})` : ''}...`);
+
+  let url = `${API_BASE_URL}/api/portfolio/analysis?personName=${personName}&viewMode=${viewMode}`;
+  if (accountId) {
+    url += `&accountId=${accountId}`;
+  }
+
+  const result = await fetchWithRetry(url, {
+    headers: getAuthHeaders()
+  });
+
+  console.log('[API] Portfolio analysis received:', result);
+  return result;
+}
+
+// ==================== Symbol Categories ====================
+
+/**
+ * Fetch all symbol categories
+ * Maps to: GET /api/symbol-categories
+ */
+export async function fetchSymbolCategories() {
+  console.log('[API] Fetching symbol categories...');
+
+  const url = `${API_BASE_URL}/api/symbol-categories`;
+  const result = await fetchWithRetry(url, {
+    headers: getAuthHeaders()
+  });
+
+  console.log(`[API] Received ${result?.length || 0} symbol categories`);
+  return result || [];
+}
+
+/**
+ * Fetch category options (types, subtypes, sectors)
+ * Maps to: GET /api/category-options
+ */
+export async function fetchCategoryOptions() {
+  console.log('[API] Fetching category options...');
+
+  const url = `${API_BASE_URL}/api/category-options`;
+  const result = await fetchWithRetry(url, {
+    headers: getAuthHeaders()
+  });
+
+  console.log('[API] Category options received');
+  return result;
+}
+
+/**
+ * Update symbol category
+ * Maps to: POST /api/symbol-categories/:symbol
+ */
+export async function updateSymbolCategory(symbol, categoryData) {
+  console.log(`[API] Updating category for ${symbol}...`, categoryData);
+
+  const url = `${API_BASE_URL}/api/symbol-categories/${symbol}`;
+  const result = await fetchWithRetry(url, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(categoryData)
+  });
+
+  console.log('[API] Category updated:', result);
+  return result;
+}
+
+/**
+ * Bulk update symbol categories
+ * Maps to: POST /api/symbol-categories/bulk
+ */
+export async function bulkUpdateSymbolCategories(categories) {
+  console.log(`[API] Bulk updating ${categories.length} categories...`);
+
+  const url = `${API_BASE_URL}/api/symbol-categories/bulk`;
+  const result = await fetchWithRetry(url, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ categories })
+  });
+
+  console.log('[API] Bulk update complete:', result);
+  return result;
+}
+
+// ==================== Testing ====================
+
 /**
  * Test Questrade API endpoint
  * Maps to: POST /api/test/questrade-api
