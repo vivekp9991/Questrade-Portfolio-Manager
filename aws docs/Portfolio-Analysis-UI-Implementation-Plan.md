@@ -284,8 +284,8 @@ F13-F15 → F23
 
 ## File Locations
 
-- **Frontend**: `D:\Project\3\aws-frontend`
-- **Backend**: `D:\Project\3\AWS-Backend`
+- **Frontend**: `Questrade-AWS/aws-frontend`
+- **Backend**: `Questrade-AWS/AWS-Backend`
 
 ---
 

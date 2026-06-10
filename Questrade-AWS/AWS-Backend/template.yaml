@@ -1,0 +1,1758 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Questrade Portfolio Manager - Serverless Backend
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures:
+    - arm64
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        NODE_ENV: production
+        LOG_LEVEL: INFO
+        USERS_TABLE:
+          Ref: UsersTable
+        PERSONS_TABLE:
+          Ref: PersonsTable
+        TOKENS_TABLE:
+          Ref: TokensTable
+        ACCOUNTS_TABLE:
+          Ref: AccountsTable
+        POSITIONS_TABLE:
+          Ref: PositionsTable
+        ACTIVITIES_TABLE:
+          Ref: ActivitiesTable
+        SYMBOLS_TABLE:
+          Ref: SymbolsTable
+        WATCHLISTS_TABLE:
+          Ref: WatchlistsTable
+        WATCHLIST_SYMBOLS_TABLE:
+          Ref: WatchlistSymbolsTable
+        SYNC_HISTORY_TABLE:
+          Ref: SyncHistoryTable
+        SYMBOL_DIVIDENDS_TABLE:
+          Ref: SymbolDividendsTable
+        YIELD_EXCLUSIONS_TABLE:
+          Ref: YieldExclusionsTable
+        SYMBOLS_MASTER_TABLE:
+          Ref: SymbolsMasterTable
+        SYMBOL_CATEGORIES_TABLE:
+          Ref: SymbolCategoriesTable
+        ACCOUNT_BALANCES_TABLE:
+          Ref: AccountBalancesTable
+        BANK_BALANCES_TABLE:
+          Ref: BankBalancesTable
+        CUSTOM_INVESTMENTS_TABLE:
+          Ref: CustomInvestmentsTable
+        CACHE_TABLE:
+          Ref: CacheTable
+        JWT_SECRET:
+          Ref: JWTSecret
+        ENCRYPTION_KEY:
+          Ref: EncryptionKey
+        QUESTRADE_AUTH_URL: https://login.questrade.com
+  Api:
+    Cors:
+      AllowMethods: '''GET,POST,PUT,DELETE,OPTIONS'''
+      AllowHeaders: '''Content-Type,Authorization'''
+      AllowOrigins:
+      - '''http://questrade-portfolio-frontend.s3-website-us-east-1.amazonaws.com'''
+      - '''*'''
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - staging
+    - prod
+    Description: Deployment environment
+  JWTSecret:
+    Type: String
+    NoEcho: true
+    Description: Secret key for JWT token signing
+    Default: change-this-secret-in-production
+  EncryptionKey:
+    Type: String
+    NoEcho: true
+    Description: Encryption key for sensitive data (must be 32 characters)
+    Default: change-this-encryption-key-prod
+  TwelveDataApiKey:
+    Type: String
+    NoEcho: true
+    Description: Twelve Data API key for exchange rates and market data
+    Default: ''
+Resources:
+  QuestradeApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName:
+        Ref: Environment
+      CorsConfiguration:
+        AllowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        AllowHeaders:
+        - Content-Type
+        - Authorization
+        AllowOrigins:
+        - '*'
+  JWTAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-jwt-authorizer-${Environment}
+      CodeUri: lambda-functions/jwt-authorizer/
+      Handler: src/handler.handler
+      MemorySize: 256
+      Timeout: 5
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: UsersTable
+    Metadata:
+      SamResourceId: JWTAuthorizerFunction
+  AuthServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-auth-service-${Environment}
+      CodeUri: lambda-functions/auth-service/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UsersTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TokensTable
+      Events:
+        Login:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/login
+            Method: POST
+        LoginVerify:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/login/verify
+            Method: POST
+        LoginRefresh:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/login/refresh
+            Method: POST
+        GetPersons:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons
+            Method: GET
+        GetPerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons/{personName}
+            Method: GET
+        CreatePerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons
+            Method: POST
+        UpdatePerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons/{personName}
+            Method: PUT
+        DeletePerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons/{personName}
+            Method: DELETE
+        CreatePersonToken:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/persons/{personName}/token
+            Method: POST
+        SetupPerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/setup-person
+            Method: POST
+        RefreshToken:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/refresh-token/{personName}
+            Method: POST
+        GetTokenStatus:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/token-status/{personName}
+            Method: GET
+        GetAccessToken:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/access-token/{personName}
+            Method: GET
+        TestConnection:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/test-connection/{personName}
+            Method: POST
+        GetTokens:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/tokens
+            Method: GET
+        GetPersonTokens:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/tokens/{personName}
+            Method: GET
+        DeleteExpiredTokens:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/tokens/expired
+            Method: DELETE
+        GetTokenStats:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/tokens/stats/summary
+            Method: GET
+        AuthHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/auth/health
+            Method: GET
+    Metadata:
+      SamResourceId: AuthServiceFunction
+  SyncOperationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-sync-operations-${Environment}
+      CodeUri: lambda-functions/sync-operations/
+      Handler: src/handler.handler
+      MemorySize: 1024
+      Timeout: 300
+      ReservedConcurrentExecutions: 5
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TokensTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AccountsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PositionsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ActivitiesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SyncHistoryTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CacheTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AccountBalancesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: BankBalancesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CustomInvestmentsTable
+      Events:
+        SyncPerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/person/{personName}
+            Method: POST
+        SyncBalancesAll:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/balances
+            Method: POST
+        SyncBalancesPerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/balances/{personName}
+            Method: POST
+        SyncContributions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/contributions
+            Method: POST
+        GetAccountBalances:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/account-balances
+            Method: GET
+        SetAccountBaseline:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/account-balances/{personName}/{accountId}
+            Method: POST
+        GetBankBalances:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/bank-balances
+            Method: GET
+        PostBankBalance:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/bank-balances
+            Method: POST
+        DeleteBankBalance:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/bank-balances/{person}/{entryId}
+            Method: DELETE
+        GetCustomInvestments:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/custom-investments
+            Method: GET
+        PostCustomInvestment:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/custom-investments
+            Method: POST
+        DeleteCustomInvestment:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/custom-investments/{person}/{investmentId}
+            Method: DELETE
+        SyncAccounts:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/accounts/{personName}
+            Method: POST
+        SyncPositions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/positions/{personName}
+            Method: POST
+        SyncActivities:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/activities/{personName}
+            Method: POST
+        SyncAccount:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/account/{personName}/{accountNumber}
+            Method: POST
+        SyncAll:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/all
+            Method: POST
+        SyncStatus:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/status
+            Method: GET
+        SyncHistory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/history
+            Method: GET
+        SyncHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/health
+            Method: GET
+        SyncCandlesPerson:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/candles/person/{personName}
+            Method: POST
+        SyncCandlesAll:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/candles/all
+            Method: POST
+        SyncTrigger:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/trigger
+            Method: POST
+        DailySync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 11 ? * MON-FRI *)
+            Description: RETIRED - portfolio sync now runs via PortfolioSyncStateMachine (single daily schedule). Kept disabled for easy rollback.
+            Enabled: false
+            Input: '{"action": "daily-sync"}'
+        PrevDayCloseSync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(30 21 ? * MON-FRI *)
+            Description: Master candle sync Mon-Fri at 4:30 PM EST (9:30 PM UTC) - updates previousClose for all symbols
+            Enabled: true
+            Input: '{"action": "master-candles"}'
+    Metadata:
+      SamResourceId: SyncOperationsFunction
+  DailySyncFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-daily-sync-${Environment}
+      CodeUri: lambda-functions/daily-sync/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          SYMBOLS_MASTER_TABLE:
+            Ref: SymbolsMasterTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TokensTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AccountsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PositionsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CacheTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolsMasterTable
+      Events:
+        DailySyncSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 22 ? * MON-FRI *)
+            Description: RETIRED - replaced by PortfolioSyncStateMachine (full sync incl. activities). Kept disabled for rollback.
+            Enabled: false
+        DailySyncManual:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/sync/daily-sync-all
+            Method: POST
+    Metadata:
+      SamResourceId: DailySyncFunction
+  DataReadServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-data-read-service-${Environment}
+      CodeUri: lambda-functions/data-read-service/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: AccountsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PositionsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ActivitiesTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: SyncHistoryTable
+      Events:
+        GetAccounts:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/accounts
+            Method: GET
+        GetAccount:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/accounts/{accountNumber}
+            Method: GET
+        GetPositions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/positions
+            Method: GET
+        GetAccountPositions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/positions/account/{accountId}
+            Method: GET
+        GetActivities:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/activities
+            Method: GET
+        GetAccountActivities:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/activities/account/{accountId}
+            Method: GET
+        GetStats:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/stats
+            Method: GET
+        DataReadHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/data/health
+            Method: GET
+        GetPersonAccounts:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/accounts/{personName}
+            Method: GET
+        GetAccountSummary:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/accounts/summary/{personName}
+            Method: GET
+        GetAccountDropdownOptions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/accounts/dropdown-options
+            Method: GET
+        GetAccountDetail:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/accounts/detail/{accountId}
+            Method: GET
+        GetPersonPositions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/positions/person/{personName}
+            Method: GET
+        GetPersonActivities:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/activities/person/{personName}
+            Method: GET
+        GetSyncStats:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/stats/sync
+            Method: GET
+        GetDataStats:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/stats/data
+            Method: GET
+        GetErrorStats:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/stats/errors
+            Method: GET
+    Metadata:
+      SamResourceId: DataReadServiceFunction
+  PortfolioAnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-portfolio-analytics-${Environment}
+      CodeUri: lambda-functions/portfolio-analytics/
+      Handler: src/handler.handler
+      MemorySize: 2048
+      Timeout: 30
+      Environment:
+        Variables:
+          TWELVE_DATA_API_KEY:
+            Ref: TwelveDataApiKey
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: AccountsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PositionsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ActivitiesTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: SymbolsTable
+      Events:
+        GetPortfolio:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/{personName}
+            Method: GET
+        GetPerformance:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/performance/{personName}
+            Method: GET
+        GetAllocation:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/allocation/{personName}
+            Method: GET
+        GetAnalytics:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/analytics/{personName}
+            Method: GET
+        GetReports:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/reports/{personName}
+            Method: GET
+        GetComparison:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/comparison/{personName}
+            Method: GET
+        PortfolioHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/health
+            Method: GET
+        GetExchangeRate:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/exchange-rate
+            Method: GET
+        GetPortfolioPositions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/positions
+            Method: GET
+        GetPortfolioCashBalances:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/cash-balances
+            Method: GET
+        GetPortfolioAnalysis:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/portfolio/analysis
+            Method: GET
+    Metadata:
+      SamResourceId: PortfolioAnalyticsFunction
+  MarketDataServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-market-data-service-${Environment}
+      CodeUri: lambda-functions/market-data-service/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          SYMBOLS_TABLE:
+            Ref: SymbolsTable
+          SYMBOLS_MASTER_TABLE:
+            Ref: SymbolsMasterTable
+          POSITIONS_TABLE:
+            Ref: PositionsTable
+          PERSONS_TABLE:
+            Ref: PersonsTable
+          TOKENS_TABLE:
+            Ref: TokensTable
+          ENCRYPTION_KEY:
+            Ref: EncryptionKey
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: SymbolsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolsMasterTable
+      # CRUD on tokens/persons: the shared token service performs on-demand,
+      # DynamoDB-locked refresh (UpdateItem) when an access token is expired/invalid.
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TokensTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PositionsTable
+      Events:
+        GetMarkets:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/markets
+            Method: GET
+        GetQuotes:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/quotes/{symbols}
+            Method: GET
+        GetSymbols:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbols
+            Method: GET
+        SearchSymbols:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbols/search
+            Method: GET
+        LookupSymbols:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbols/lookup
+            Method: POST
+        GetStreamPort:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbols/stream-port
+            Method: POST
+        MarketHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/market/health
+            Method: GET
+    Metadata:
+      SamResourceId: MarketDataServiceFunction
+  WatchlistServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-watchlist-service-${Environment}
+      CodeUri: lambda-functions/watchlist-service/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: WatchlistsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: WatchlistSymbolsTable
+      Events:
+        GetWatchlists:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/watchlists/{personName}
+            Method: GET
+        CreateWatchlist:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/watchlists/{personName}
+            Method: POST
+        UpdateWatchlist:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/watchlists/{personName}/{watchlistId}
+            Method: PUT
+        DeleteWatchlist:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/watchlists/{personName}/{watchlistId}
+            Method: DELETE
+        WatchlistHealth:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/watchlist/health
+            Method: GET
+    Metadata:
+      SamResourceId: WatchlistServiceFunction
+  DividendManagementFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-dividend-management-${Environment}
+      CodeUri: lambda-functions/dividend-management/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 30
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolDividendsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: YieldExclusionsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SymbolCategoriesTable
+      # Read-only: D1 dividend-actuals derives review data from activities + positions.
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ActivitiesTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PositionsTable
+      Events:
+        GetDividendActuals:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/actuals
+            Method: GET
+        GetDividendActualsSymbol:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/actuals/{symbol}
+            Method: GET
+        GetAllSymbolDividends:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/all
+            Method: GET
+        GetSymbolDividend:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/symbol/{symbol}
+            Method: GET
+        SetSymbolDividend:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/symbol/{symbol}
+            Method: POST
+        DeleteSymbolDividend:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/symbol/{symbol}
+            Method: DELETE
+        BulkUpdateSymbolDividends:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/bulk
+            Method: POST
+        ResetSymbolDividendOverride:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-dividends/symbol/{symbol}/reset-override
+            Method: POST
+        GetAllYieldExclusions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/yield-exclusions
+            Method: GET
+        GetYieldExclusion:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/yield-exclusions/{symbol}
+            Method: GET
+        AddYieldExclusion:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/yield-exclusions/{symbol}
+            Method: POST
+        RemoveYieldExclusion:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/yield-exclusions/{symbol}
+            Method: DELETE
+        GetAllSymbolCategories:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories
+            Method: GET
+        GetSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: GET
+        SetSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: POST
+        DeleteSymbolCategory:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/{symbol}
+            Method: DELETE
+        BulkUpdateSymbolCategories:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/symbol-categories/bulk
+            Method: POST
+        GetCategoryOptions:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: QuestradeApi
+            Path: /api/category-options
+            Method: GET
+    Metadata:
+      SamResourceId: DividendManagementFunction
+  TokenRefreshSchedulerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-token-refresh-scheduler-${Environment}
+      CodeUri: lambda-functions/token-refresh-scheduler/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 300
+      Environment:
+        Variables:
+          PERSONS_TABLE:
+            Ref: PersonsTable
+          TOKENS_TABLE:
+            Ref: TokensTable
+          CACHE_TABLE:
+            Ref: CacheTable
+          ENCRYPTION_KEY:
+            Ref: EncryptionKey
+          QUESTRADE_AUTH_URL: https://login.questrade.com
+          TWELVE_DATA_API_KEY:
+            Ref: TwelveDataApiKey
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PersonsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TokensTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CacheTable
+      Events:
+        ScheduledRefresh:
+          Type: Schedule
+          Properties:
+            Schedule: rate(12 hours)
+            Description: Keepalive — rotates each login's single-use refresh token only when stale (>2 days old or expiring within 36h), keeping it inside Questrade's 3-day window. Access tokens (30 min) are refreshed on-demand by sync/API. Serialized via DynamoDB lock in the shared token service.
+            Enabled: true
+    Metadata:
+      SamResourceId: TokenRefreshSchedulerFunction
+  DailySyncSchedulerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-daily-sync-scheduler-${Environment}
+      CodeUri: lambda-functions/daily-sync-scheduler/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 300
+      Environment:
+        Variables:
+          SYNC_API_URL:
+            Fn::Sub: https://${QuestradeApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/api
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - execute-api:Invoke
+          Resource:
+            Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${QuestradeApi}/*
+      Events:
+        DailySync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 11 ? * MON-FRI *)
+            Description: Daily sync Mon-Fri at 6:00 AM EST (11:00 AM UTC) - fetches previous day close
+            Enabled: true
+    Metadata:
+      SamResourceId: DailySyncSchedulerFunction
+
+  MonthlyDividendSyncFunction:
+    Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Fn::Sub: questrade-monthly-dividend-sync-${Environment}
+      CodeUri: lambda-functions/monthly-dividend-sync/
+      Handler: src/handler.handler
+      MemorySize: 512
+      Timeout: 600
+      Environment:
+        Variables:
+          SYNC_FUNCTION_NAME:
+            Fn::Sub: questrade-sync-operations-${Environment}
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource:
+            Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:questrade-sync-operations-${Environment}
+      Events:
+        MonthlyDividendSync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 13 ? * MON *)
+            Description: Weekly Questrade dividend refresh - Mondays 1:00 PM UTC (keeps symbol-dividends current for variable ETFs; was monthly)
+            Enabled: true
+    Metadata:
+      SamResourceId: MonthlyDividendSyncFunction
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-users-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: username
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: username-index
+        KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  PersonsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-persons-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: personName
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: userId-index
+        KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  TokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-tokens-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: tokenType
+        AttributeType: S
+      - AttributeName: expiresAt
+        AttributeType: N
+      KeySchema:
+      - AttributeName: personName
+        KeyType: HASH
+      - AttributeName: tokenType
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: expiresAt-index
+        KeySchema:
+        - AttributeName: expiresAt
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+  AccountsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-accounts-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: accountId
+        AttributeType: S
+      - AttributeName: personName
+        AttributeType: S
+      KeySchema:
+      - AttributeName: accountId
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: personName-index
+        KeySchema:
+        - AttributeName: personName
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  PositionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-positions-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: accountId
+        AttributeType: S
+      - AttributeName: symbolId
+        AttributeType: S
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: symbol
+        AttributeType: S
+      KeySchema:
+      - AttributeName: accountId
+        KeyType: HASH
+      - AttributeName: symbolId
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: personName-symbol-index
+        KeySchema:
+        - AttributeName: personName
+          KeyType: HASH
+        - AttributeName: symbol
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: symbol-index
+        KeySchema:
+        - AttributeName: symbol
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  ActivitiesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-activities-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: accountId
+        AttributeType: S
+      - AttributeName: activityDateTime
+        AttributeType: S
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: symbol
+        AttributeType: S
+      KeySchema:
+      - AttributeName: accountId
+        KeyType: HASH
+      - AttributeName: activityDateTime
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: personName-date-index
+        KeySchema:
+        - AttributeName: personName
+          KeyType: HASH
+        - AttributeName: activityDateTime
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: symbol-date-index
+        KeySchema:
+        - AttributeName: symbol
+          KeyType: HASH
+        - AttributeName: activityDateTime
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+  SymbolsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-symbols-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: symbolId
+        AttributeType: S
+      - AttributeName: symbol
+        AttributeType: S
+      - AttributeName: sector
+        AttributeType: S
+      KeySchema:
+      - AttributeName: symbolId
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: symbol-index
+        KeySchema:
+        - AttributeName: symbol
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: sector-index
+        KeySchema:
+        - AttributeName: sector
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  WatchlistsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-watchlists-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: watchlistId
+        AttributeType: S
+      - AttributeName: personName
+        AttributeType: S
+      KeySchema:
+      - AttributeName: watchlistId
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: personName-index
+        KeySchema:
+        - AttributeName: personName
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  WatchlistSymbolsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-watchlist-symbols-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: watchlistId
+        AttributeType: S
+      - AttributeName: symbol
+        AttributeType: S
+      KeySchema:
+      - AttributeName: watchlistId
+        KeyType: HASH
+      - AttributeName: symbol
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: symbol-index
+        KeySchema:
+        - AttributeName: symbol
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  SyncHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-sync-history-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: syncTimestamp
+        AttributeType: N
+      - AttributeName: status
+        AttributeType: S
+      KeySchema:
+      - AttributeName: personName
+        KeyType: HASH
+      - AttributeName: syncTimestamp
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: status-date-index
+        KeySchema:
+        - AttributeName: status
+          KeyType: HASH
+        - AttributeName: syncTimestamp
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+  SymbolDividendsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-symbol-dividends-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: symbol
+        AttributeType: S
+      - AttributeName: isManualOverride
+        AttributeType: S
+      KeySchema:
+      - AttributeName: symbol
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: manualOverride-index
+        KeySchema:
+        - AttributeName: isManualOverride
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  # DRIFT NOTE: CloudFormation's stack record for this table still uses the OLD
+  # composite key (personName HASH + symbol RANGE + symbol-index GSI). The LIVE
+  # table and the current code use a single-key schema (symbol HASH only; see
+  # dividend-management/src/handlers/yieldExclusions.js). This definition is kept
+  # matching the stack record to avoid a forced replacement (CloudFormation cannot
+  # replace a custom-named table). TODO: reconcile to the single-key schema via
+  # remove-with-retain + re-import (tracked as architecture-cleanup follow-up).
+  YieldExclusionsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: questrade-yield-exclusions-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: symbol
+        AttributeType: S
+      KeySchema:
+      - AttributeName: personName
+        KeyType: HASH
+      - AttributeName: symbol
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: symbol-index
+        KeySchema:
+        - AttributeName: symbol
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  SymbolsMasterTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-symbols-master-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: symbol
+        AttributeType: S
+      - AttributeName: needsReview
+        AttributeType: S
+      KeySchema:
+      - AttributeName: symbol
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: needsReview-index
+        KeySchema:
+        - AttributeName: needsReview
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: questrade-cache-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: cacheKey
+        AttributeType: S
+      KeySchema:
+      - AttributeName: cacheKey
+        KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+  SymbolCategoriesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: questrade-symbol-categories-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: symbol
+        AttributeType: S
+      - AttributeName: symbolType
+        AttributeType: S
+      KeySchema:
+      - AttributeName: symbol
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: symbolType-index
+        KeySchema:
+        - AttributeName: symbolType
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+
+  # Account balance & contribution tracking (docs/account-balance-tracking.md).
+  # PK personName + SK accountId. Holds current per-currency value (balances sync, B1)
+  # and the manual contribution baseline (B3). DeletionPolicy Retain — holds owner overrides.
+  AccountBalancesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: questrade-account-balances-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: personName
+        AttributeType: S
+      - AttributeName: accountId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: personName
+        KeyType: HASH
+      - AttributeName: accountId
+        KeyType: RANGE
+
+  # Net-worth report (docs/net-worth-report.md). Manual bank/cash balances — free-form
+  # person + bank, currency, amount. DeletionPolicy Retain — owner data.
+  BankBalancesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: questrade-bank-balances-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: person
+        AttributeType: S
+      - AttributeName: entryId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: person
+        KeyType: HASH
+      - AttributeName: entryId
+        KeyType: RANGE
+
+  # Net-worth report (docs/net-worth-report.md). Manual custom investments (lot-based or
+  # simple line) — free-form person + name, currency, category. DeletionPolicy Retain.
+  CustomInvestmentsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: questrade-custom-investments-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: person
+        AttributeType: S
+      - AttributeName: investmentId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: person
+        KeyType: HASH
+      - AttributeName: investmentId
+        KeyType: RANGE
+
+  # Phase 2b: portfolio sync orchestration. Maps over eligible logins, syncing each
+  # in isolation with retry/backoff. Replaces the retired DailySync/daily-sync crons.
+  PortfolioSyncStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name:
+        Fn::Sub: questrade-portfolio-sync-${Environment}
+      Type: STANDARD
+      DefinitionSubstitutions:
+        SyncFunctionArn:
+          Fn::GetAtt: [SyncOperationsFunction, Arn]
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: SyncOperationsFunction
+      Events:
+        DailyAfterClose:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 22 ? * MON-FRI *)
+            Description: Daily portfolio sync Mon-Fri ~6pm ET (after market close) for all eligible logins
+            Enabled: true
+      Definition:
+        Comment: Daily Questrade portfolio sync - per-login isolation with retry/backoff
+        StartAt: GetEligiblePersons
+        States:
+          GetEligiblePersons:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: ${SyncFunctionArn}
+              Payload:
+                task: getEligiblePersons
+            ResultSelector:
+              persons.$: $.Payload.persons
+            ResultPath: $.eligible
+            Next: SyncPersons
+          SyncPersons:
+            Type: Map
+            ItemsPath: $.eligible.persons
+            MaxConcurrency: 1
+            Parameters:
+              personName.$: $$.Map.Item.Value
+            Iterator:
+              StartAt: SyncOnePerson
+              States:
+                SyncOnePerson:
+                  Type: Task
+                  Resource: arn:aws:states:::lambda:invoke
+                  Parameters:
+                    FunctionName: ${SyncFunctionArn}
+                    Payload:
+                      task: syncPerson
+                      personName.$: $.personName
+                  Retry:
+                  - ErrorEquals:
+                    - States.TaskFailed
+                    - Lambda.ServiceException
+                    - Lambda.TooManyRequestsException
+                    - Lambda.AWSLambdaException
+                    - States.Timeout
+                    IntervalSeconds: 10
+                    BackoffRate: 2.0
+                    MaxAttempts: 3
+                  Catch:
+                  - ErrorEquals:
+                    - States.ALL
+                    ResultPath: $.error
+                    Next: PersonFailed
+                  End: true
+                PersonFailed:
+                  Type: Pass
+                  End: true
+            End: true
+Outputs:
+  PortfolioSyncStateMachineArn:
+    Description: ARN of the daily portfolio sync state machine (use for manual StartExecution)
+    Value:
+      Ref: PortfolioSyncStateMachine
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Sub: https://${QuestradeApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiEndpoint
+  UsersTableName:
+    Description: Users DynamoDB table name
+    Value:
+      Ref: UsersTable
+  PersonsTableName:
+    Description: Persons DynamoDB table name
+    Value:
+      Ref: PersonsTable
+  TokensTableName:
+    Description: Tokens DynamoDB table name
+    Value:
+      Ref: TokensTable
+  AccountsTableName:
+    Description: Accounts DynamoDB table name
+    Value:
+      Ref: AccountsTable
+  PositionsTableName:
+    Description: Positions DynamoDB table name
+    Value:
+      Ref: PositionsTable
+  ActivitiesTableName:
+    Description: Activities DynamoDB table name
+    Value:
+      Ref: ActivitiesTable
+  SymbolsTableName:
+    Description: Symbols DynamoDB table name
+    Value:
+      Ref: SymbolsTable
+  WatchlistsTableName:
+    Description: Watchlists DynamoDB table name
+    Value:
+      Ref: WatchlistsTable

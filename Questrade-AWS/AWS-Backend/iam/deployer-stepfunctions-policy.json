@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StepFunctionsManage",
+      "Effect": "Allow",
+      "Action": [
+        "states:CreateStateMachine",
+        "states:UpdateStateMachine",
+        "states:DeleteStateMachine",
+        "states:DescribeStateMachine",
+        "states:ListStateMachines",
+        "states:TagResource",
+        "states:UntagResource",
+        "states:ListTagsForResource",
+        "states:StartExecution",
+        "states:StopExecution",
+        "states:DescribeExecution",
+        "states:ListExecutions",
+        "states:DescribeStateMachineForExecution"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassRolesForStateMachineAndSchedule",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::112312239796:role/questrade-portfolio-backend-*"
+    }
+  ]
+}

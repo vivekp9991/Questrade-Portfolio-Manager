@@ -1,0 +1,421 @@
+{
+    "Items": [
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "XIU.TO"
+            },
+            "updatedAt": {
+                "N": "1763567313053"
+            },
+            "createdAt": {
+                "N": "1763567313053"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "XQQ.TO"
+            },
+            "updatedAt": {
+                "N": "1763567313507"
+            },
+            "createdAt": {
+                "N": "1763567313507"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "SLV"
+            },
+            "updatedAt": {
+                "N": "1763495662448"
+            },
+            "createdAt": {
+                "N": "1763495662448"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "ZCH.TO"
+            },
+            "updatedAt": {
+                "N": "1763567313729"
+            },
+            "createdAt": {
+                "N": "1763567313729"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "ZSP.TO"
+            },
+            "updatedAt": {
+                "N": "1763567314312"
+            },
+            "createdAt": {
+                "N": "1763567314312"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "HXT.TO"
+            },
+            "updatedAt": {
+                "N": "1763495477827"
+            },
+            "createdAt": {
+                "N": "1763495477827"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "VFV.TO"
+            },
+            "updatedAt": {
+                "N": "1763495662875"
+            },
+            "createdAt": {
+                "N": "1763495662875"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "GLDM"
+            },
+            "updatedAt": {
+                "N": "1763495477100"
+            },
+            "createdAt": {
+                "N": "1763495477100"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "XCH.TO"
+            },
+            "updatedAt": {
+                "N": "1763495663836"
+            },
+            "createdAt": {
+                "N": "1763495663836"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "PPLT"
+            },
+            "updatedAt": {
+                "N": "1763495509011"
+            },
+            "createdAt": {
+                "N": "1763495509011"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "SIVR"
+            },
+            "updatedAt": {
+                "N": "1763495662034"
+            },
+            "createdAt": {
+                "N": "1763495662034"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "IAU"
+            },
+            "updatedAt": {
+                "N": "1763495507770"
+            },
+            "createdAt": {
+                "N": "1763495507770"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "GLD"
+            },
+            "updatedAt": {
+                "N": "1763494761955"
+            },
+            "createdAt": {
+                "N": "1763494761955"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "VUN.TO"
+            },
+            "updatedAt": {
+                "N": "1763495663357"
+            },
+            "createdAt": {
+                "N": "1763495663357"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "KILO.TO"
+            },
+            "updatedAt": {
+                "N": "1763495508309"
+            },
+            "createdAt": {
+                "N": "1763495508309"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "MNS.TO"
+            },
+            "updatedAt": {
+                "N": "1763495508582"
+            },
+            "createdAt": {
+                "N": "1763495508582"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "PSLV.TO"
+            },
+            "updatedAt": {
+                "N": "1763495567026"
+            },
+            "createdAt": {
+                "N": "1763495567026"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        },
+        {
+            "symbolId": {
+                "NULL": true
+            },
+            "symbol": {
+                "S": "ZIU.TO"
+            },
+            "updatedAt": {
+                "N": "1763567314027"
+            },
+            "createdAt": {
+                "N": "1763567314027"
+            },
+            "name": {
+                "S": ""
+            },
+            "excludedBy": {
+                "S": "user"
+            },
+            "reason": {
+                "S": "User excluded"
+            }
+        }
+    ],
+    "Count": 18,
+    "ScannedCount": 18,
+    "ConsumedCapacity": null
+}

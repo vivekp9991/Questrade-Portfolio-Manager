@@ -1,0 +1,99 @@
+/* Net-Worth Report — ported from docs sample mockup, scoped under .nw-report */
+.nw-wrap { --nwink:#1c2530; --nwmuted:#6b7785; --nwline:#d7dee6; --nwline2:#aeb9c5; --nwcard:#fff;
+  --nwaccent:#1f5f8b; --nwsoft:#eaf2f8; --nwpos:#137a4b; --nwneg:#b4232a; --nwcad:#1f5f8b; --nwusd:#6a3fa0;
+  --nwband:#eef3f7; --nwp0:#1f5f8b; --nwp1:#8a5a1f; display:flex; flex-direction:column; gap:16px; }
+
+.nw-tabs { display:flex; gap:4px; flex-wrap:wrap; border-bottom:1px solid var(--border-primary); }
+.nw-tab { padding:9px 16px; background:transparent; border:1px solid transparent; border-bottom:none;
+  border-radius:6px 6px 0 0; color:var(--text-secondary); font-size:12px; font-weight:600; cursor:pointer;
+  text-transform:uppercase; letter-spacing:.4px; }
+.nw-tab:hover { color:var(--text-primary); }
+.nw-tab.active { background:var(--bg-secondary); border-color:var(--border-primary); color:var(--accent-primary); margin-bottom:-1px; }
+.nw-a4-hint { padding:2px 0; }
+
+.nw-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.nw-toolbar .nw-note { font-size:12px; color:var(--text-tertiary); }
+.nw-btn { border:1px solid var(--nwaccent); background:var(--nwaccent); color:#fff; padding:7px 16px;
+  border-radius:6px; font-size:13px; cursor:pointer; font-weight:600; }
+.nw-btn.ghost { background:transparent; color:var(--nwaccent); }
+.nw-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* The printable report surface — light, like paper, regardless of app theme */
+.nw-report { background:var(--nwcard); color:var(--nwink); padding:24px 28px 32px; border-radius:8px;
+  font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.4;
+  box-shadow:0 1px 4px rgba(0,0,0,.15); }
+.nw-report .report-head { display:flex; justify-content:space-between; align-items:flex-end;
+  border-bottom:2px solid var(--nwink); padding-bottom:12px; }
+.nw-report .report-head h1 { margin:0; font-size:23px; }
+.nw-report .report-head .sub { color:var(--nwmuted); font-size:12px; margin-top:3px; }
+.nw-report .meta-box { text-align:right; font-size:12px; color:var(--nwmuted); }
+.nw-report .rate-pill { display:inline-block; margin-top:6px; padding:4px 10px; background:var(--nwsoft);
+  color:var(--nwaccent); border-radius:20px; font-weight:600; font-size:12px; }
+
+.nw-report section { margin-top:22px; }
+.nw-report .sec-head { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+.nw-report .sec-tag { background:var(--nwaccent); color:#fff; font-weight:700; width:22px; height:22px;
+  border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
+.nw-report .sec-head h2 { margin:0; font-size:16px; }
+.nw-report .sec-head .hint { color:var(--nwmuted); font-size:11px; font-weight:400; }
+
+.nw-report table { width:100%; border-collapse:collapse; }
+.nw-report th, .nw-report td { padding:4px 8px; }
+.nw-report .num { font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right; }
+.nw-report .pos { color:var(--nwpos); }
+.nw-report .neg { color:var(--nwneg); }
+.nw-report .gap { width:14px; border:none !important; background:#fff !important; padding:0; }
+.nw-report .person-head { text-align:center; font-size:12px; font-weight:700; letter-spacing:.5px;
+  color:#fff; padding:5px; border-radius:3px 3px 0 0; }
+.nw-report .person-head.p0 { background:var(--nwp0); }
+.nw-report .person-head.p1 { background:var(--nwp1); }
+.nw-report thead .colh th { font-size:10.5px; text-transform:uppercase; letter-spacing:.3px;
+  color:var(--nwmuted); border-bottom:1px solid var(--nwline2); font-weight:600; text-align:right; }
+.nw-report thead .colh th.lbl { text-align:left; }
+.nw-report tbody td { border-bottom:1px solid var(--nwline); }
+.nw-report tbody td.lbl { text-align:left; }
+.nw-report tr.subtotal td { border-top:1px solid var(--nwline2); border-bottom:none; font-weight:600; background:#fbfcfd; }
+.nw-report tr.grand td { border-top:2px solid var(--nwink); border-bottom:none; font-weight:700; }
+.nw-report tr.ccy-band td { background:var(--nwband); font-weight:700; font-size:11px; letter-spacing:.6px;
+  text-transform:uppercase; color:var(--nwaccent); border-bottom:1px solid var(--nwline); }
+.nw-report .tag-manual { font-size:9px; font-weight:700; color:var(--nwaccent); background:var(--nwsoft);
+  padding:1px 5px; border-radius:3px; margin-left:6px; }
+.nw-report .muted { color:var(--nwmuted); }
+.nw-report .mini-title { font-weight:700; font-size:13px; margin:0 0 4px; }
+.nw-report .mini-title .ccy-cad { color:var(--nwcad); }
+.nw-report .mini-title .ccy-usd { color:var(--nwusd); }
+.nw-report .two-up { display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+.nw-report .scroll { overflow-x:auto; }
+
+.nw-report .totals-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.nw-report .total-card { border:1px solid var(--nwline2); border-radius:8px; padding:16px 18px; }
+.nw-report .total-card.cad { border-top:4px solid var(--nwcad); }
+.nw-report .total-card.usd { border-top:4px solid var(--nwusd); }
+.nw-report .total-card h3 { margin:0 0 8px; font-size:13px; }
+.nw-report .total-card .big { font-size:25px; font-weight:700; }
+.nw-report .total-card .breakdown { margin-top:12px; font-size:12px; }
+.nw-report .total-card .breakdown div { display:flex; justify-content:space-between; padding:3px 0; border-top:1px dashed var(--nwline); }
+
+.nw-report .cat-row { display:grid; grid-template-columns:130px 1fr 110px 56px; gap:10px; align-items:center; padding:4px 0; }
+.nw-report .cat-bar-track { background:var(--nwsoft); border-radius:4px; height:14px; overflow:hidden; }
+.nw-report .cat-bar-fill { height:100%; border-radius:4px; }
+.nw-report .cat-name { font-weight:600; }
+.nw-report .cat-pct { text-align:right; font-weight:700; }
+.nw-report .cat-amt { text-align:right; color:var(--nwmuted); }
+.nw-report .footnote { margin-top:8px; font-size:11px; color:var(--nwmuted); font-style:italic; }
+
+/* ---- editor panel (screen only) ---- */
+.nw-manage { background:var(--bg-secondary); border:1px solid var(--border-primary); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:14px; }
+.nw-manage h3 { margin:0; font-size:13px; color:var(--text-primary); text-transform:uppercase; letter-spacing:.5px; }
+.nw-manage .nw-rowform { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.nw-manage input, .nw-manage select { padding:6px 8px; background:var(--bg-primary); border:1px solid var(--border-primary);
+  border-radius:5px; color:var(--text-primary); font-size:12px; }
+.nw-manage .nw-list { display:flex; flex-direction:column; gap:4px; }
+.nw-manage .nw-li { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); }
+.nw-manage .nw-del { cursor:pointer; color:var(--nwneg); font-weight:700; border:none; background:none; font-size:14px; }
+.nw-manage .nw-sub { font-size:11px; color:var(--text-tertiary); }
+.nw-empty { text-align:center; padding:30px; color:var(--text-tertiary); font-style:italic; }
+
+@media (max-width:900px) {
+  .nw-report .two-up, .nw-report .totals-grid { grid-template-columns:1fr; }
+}

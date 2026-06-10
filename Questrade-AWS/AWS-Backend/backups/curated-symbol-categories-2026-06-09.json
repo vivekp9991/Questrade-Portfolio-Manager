@@ -1,0 +1,1082 @@
+{
+    "Items": [
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HDIF.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446435736"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "TSX"
+            },
+            "symbol": {
+                "S": "XIU.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446673402"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "NASDAQ"
+            },
+            "symbol": {
+                "S": "XQQ.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446673592"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HDIV.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446435925"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "SILVER"
+            },
+            "symbol": {
+                "S": "SLV"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446610796"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "INTERNATIONAL"
+            },
+            "symbol": {
+                "S": "ZCH.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446673770"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "CNCL.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446353682"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "SP500"
+            },
+            "symbol": {
+                "S": "ZSP.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446674154"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "FMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446354621"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "ECHI.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446353880"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "TSX"
+            },
+            "symbol": {
+                "S": "HXT.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446437002"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "SP500"
+            },
+            "symbol": {
+                "S": "VFV.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446611726"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "QQCL.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446530913"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "GOLD"
+            },
+            "symbol": {
+                "S": "GLDM"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446435337"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "TSX"
+            },
+            "symbol": {
+                "S": "ZNQ.TO"
+            },
+            "updatedAt": {
+                "N": "1764450925063"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "USCL.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446611358"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "LMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446529771"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HYLD.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446529207"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "INTERNATIONAL"
+            },
+            "symbol": {
+                "S": "XCH.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446612081"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "AMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764445902353"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "PLATINUM"
+            },
+            "symbol": {
+                "S": "PPLT"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446530173"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HBIE.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446435536"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HHLE.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446436465"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "UTES.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446611546"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "SILVER"
+            },
+            "symbol": {
+                "S": "SIVR"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446610621"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HTAE.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446436829"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "SDAY.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446610428"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "GOLD"
+            },
+            "symbol": {
+                "S": "IAU"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446529395"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HHIC.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446436107"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "UMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446611174"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "SMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446610981"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "ENCL.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446354261"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "QDAY.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446530544"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HHIS.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446436294"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "GOLD"
+            },
+            "symbol": {
+                "S": "GLD"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446354810"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "SP500"
+            },
+            "symbol": {
+                "S": "VUN.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446611909"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "createdAt": {
+                "N": "1732900000000"
+            },
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "GOLD"
+            },
+            "symbol": {
+                "S": "KILO.TO"
+            },
+            "updatedAt": {
+                "N": "1732934400000"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "CDAY.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446353500"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "BMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446353309"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "SILVER"
+            },
+            "symbol": {
+                "S": "MNS.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446529965"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "EQCL.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446354437"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "COMMODITY"
+            },
+            "symbolSubType": {
+                "S": "SILVER"
+            },
+            "symbol": {
+                "S": "PSLV.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446530346"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "INDEX_ETF"
+            },
+            "symbolSubType": {
+                "S": "TSX"
+            },
+            "symbol": {
+                "S": "ZIU.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446673952"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446436647"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "EMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446354073"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "QMAX.TO"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedAt": {
+                "N": "1764446530727"
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        },
+        {
+            "symbolType": {
+                "S": "DIVIDEND_ETF"
+            },
+            "symbolSubType": {
+                "S": "COVERED_CALL"
+            },
+            "symbol": {
+                "S": "HHIH.TO"
+            },
+            "updatedAt": {
+                "N": "1764450924862"
+            },
+            "subSector": {
+                "NULL": true
+            },
+            "sector": {
+                "NULL": true
+            },
+            "updatedBy": {
+                "S": "manual"
+            }
+        }
+    ],
+    "Count": 47,
+    "ScannedCount": 47,
+    "ConsumedCapacity": null
+}

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Net-Worth Report — Mockup</title>
+<style>
+  :root {
+    --ink: #1c2530;
+    --muted: #6b7785;
+    --line: #d7dee6;
+    --line-strong: #aeb9c5;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --accent: #1f5f8b;
+    --accent-soft: #eaf2f8;
+    --pos: #137a4b;
+    --neg: #b4232a;
+    --cad: #1f5f8b;
+    --usd: #6a3fa0;
+    --band: #eef3f7;
+    --zebra: #f8fafc;
+    --vivek: #1f5f8b;
+    --dharati: #8a5a1f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto 40px;
+    background: var(--card);
+    padding: 28px 34px 40px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+
+  /* ---- header ---- */
+  .report-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--ink); padding-bottom: 12px;
+  }
+  .report-head h1 { margin: 0; font-size: 24px; letter-spacing: .3px; }
+  .report-head .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .meta-box { text-align: right; font-size: 12px; color: var(--muted); }
+  .rate-pill {
+    display: inline-block; margin-top: 6px; padding: 4px 10px;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 20px; font-weight: 600; font-size: 12px;
+  }
+
+  /* ---- section ---- */
+  section { margin-top: 24px; }
+  .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .sec-tag {
+    background: var(--accent); color: #fff; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .sec-head h2 { margin: 0; font-size: 16px; }
+  .sec-head .hint { color: var(--muted); font-size: 11px; font-weight: 400; }
+
+  /* ---- generic table ---- */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 4px 8px; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .gap { width: 14px; border: none !important; background: #fff !important; padding: 0; }
+  .person-head {
+    text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .5px;
+    color: #fff; padding: 5px; border-radius: 3px 3px 0 0;
+  }
+  .person-head.p0 { background: var(--vivek); }
+  .person-head.p1 { background: var(--dharati); }
+  thead .colh th {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px;
+    color: var(--muted); border-bottom: 1px solid var(--line-strong); font-weight: 600;
+    text-align: right; padding: 4px 8px;
+  }
+  thead .colh th.lbl { text-align: left; }
+  tbody td { border-bottom: 1px solid var(--line); }
+  tbody td.lbl { text-align: left; }
+  tr.subtotal td {
+    border-top: 1px solid var(--line-strong); border-bottom: none;
+    font-weight: 600; background: #fbfcfd;
+  }
+  tr.grand td { border-top: 2px solid var(--ink); border-bottom: none; font-weight: 700; }
+  tr.ccy-band td {
+    background: var(--band); font-weight: 700; font-size: 11px; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--accent); padding: 4px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tag-manual {
+    font-size: 9px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; margin-left: 6px;
+  }
+  .muted { color: var(--muted); }
+  .mini-title { font-weight: 700; font-size: 13px; margin: 0 0 4px; }
+  .mini-title .ccy-cad { color: var(--cad); }
+  .mini-title .ccy-usd { color: var(--usd); }
+
+  /* ---- two-up layout for bank tables ---- */
+  .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .scroll { overflow-x: auto; }
+
+  /* ---- grand-total cards (D) ---- */
+  .totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .total-card { border: 1px solid var(--line-strong); border-radius: 8px; padding: 16px 18px; }
+  .total-card.cad { border-top: 4px solid var(--cad); }
+  .total-card.usd { border-top: 4px solid var(--usd); }
+  .total-card h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .3px; }
+  .total-card .big { font-size: 26px; font-weight: 700; }
+  .total-card .breakdown { margin-top: 12px; font-size: 12px; }
+  .total-card .breakdown div { display: flex; justify-content: space-between; padding: 3px 0; border-top: 1px dashed var(--line); }
+
+  /* ---- category breakdown (E) ---- */
+  .cat-row { display: grid; grid-template-columns: 120px 1fr 90px 56px; gap: 10px; align-items: center; padding: 4px 0; }
+  .cat-bar-track { background: var(--accent-soft); border-radius: 4px; height: 14px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-name { font-weight: 600; }
+  .cat-pct { text-align: right; font-weight: 700; }
+  .cat-amt { text-align: right; color: var(--muted); }
+  .footnote { margin-top: 8px; font-size: 11px; color: var(--muted); font-style: italic; }
+
+  /* ---- toolbar (screen only) ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 10; background: #ffffffee; backdrop-filter: blur(4px);
+    border-bottom: 1px solid var(--line); padding: 10px 34px; display: flex; gap: 12px;
+    align-items: center; margin-bottom: 18px;
+  }
+  .toolbar .spacer { flex: 1; }
+  .btn { border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .btn.ghost { background: #fff; color: var(--accent); }
+  .toolbar .note { font-size: 12px; color: var(--muted); }
+
+  /* ====== PRINT: A4, ~2 pages ====== */
+  @page { size: A4 portrait; margin: 12mm 10mm; }
+  @media print {
+    body { background: #fff; font-size: 10px; }
+    .toolbar { display: none; }
+    .page { box-shadow: none; margin: 0; max-width: none; padding: 0; }
+    section { break-inside: avoid; }
+    .page-break { break-before: page; }
+    .scroll { overflow: visible; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <strong>Net-Worth Report — layout mockup</strong>
+  <span class="note">Edit <code>mock-data.js</code> for the numbers · this is a layout draft, not the final UI.</span>
+  <span class="spacer"></span>
+  <button class="btn ghost" onclick="location.reload()">Reload</button>
+  <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
+</div>
+
+<div class="page" id="report"></div>
+
+<script src="mock-data.js"></script>
+<script>
+const D = MOCK_DATA;
+const RATE = D.meta.usdCadRate;
+const P = D.meta.people;                 // [Vivek, Dharati]
+const QT_ACCOUNTS = ["Cash", "TFSA", "RRSP"];
+
+/* ---- formatting ---- */
+const fmt = (n, ccy) => {
+  const s = n < 0 ? "-" : "";
+  const v = Math.abs(n).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${s}${ccy === "USD" ? "US$" : "$"}${v}`;
+};
+const fmtN = (n) => (n < 0 ? "-" : "") + Math.abs(n).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const cl = (n) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
+const toCAD = (n, c) => (c === "USD" ? n * RATE : n);
+const toUSD = (n, c) => (c === "CAD" ? n / RATE : n);
+const blank = () => ({ contribution: 0, invested: 0, pnl: 0, cash: 0, total: 0 });
+
+/* custom-investment computed fields */
+const CUSTOM = D.customInvestments.map(c => {
+  if (c.lots) {
+    const totalQty = c.lots.reduce((s, l) => s + l.quantity, 0);
+    const cost = c.lots.reduce((s, l) => s + l.quantity * l.price, 0);
+    const currentValue = totalQty * c.currentPrice;
+    return { ...c, totalQty, cost, avg: cost / totalQty, currentValue, pnl: currentValue - cost, kind: "lots" };
+  }
+  return { ...c, totalQty: null, avg: null, currentValue: c.currentValue, pnl: c.currentValue - c.cost, kind: "simple" };
+});
+
+/* =====================================================================
+   Section A — Bank / cash (people side by side, two currency tables)
+   ===================================================================== */
+function bankTable(ccy) {
+  const cc = ccy === "CAD" ? "cad" : "usd";
+  const V = D.bankBalances.filter(b => b.currency === ccy && b.person === P[0]);
+  const H = D.bankBalances.filter(b => b.currency === ccy && b.person === P[1]);
+  const n = Math.max(V.length, H.length, 3);
+  let body = "";
+  for (let i = 0; i < n; i++) {
+    const v = V[i], h = H[i];
+    body += `<tr>
+      <td class="lbl">${v ? v.bankName : ""}</td><td class="num">${v ? fmt(v.amount, ccy) : ""}</td>
+      <td class="gap"></td>
+      <td class="lbl">${h ? h.bankName : ""}</td><td class="num">${h ? fmt(h.amount, ccy) : ""}</td></tr>`;
+  }
+  const vt = V.reduce((s, b) => s + b.amount, 0), ht = H.reduce((s, b) => s + b.amount, 0);
+  body += `<tr class="subtotal">
+      <td class="lbl">Total</td><td class="num">${fmt(vt, ccy)}</td><td class="gap"></td>
+      <td class="lbl">Total</td><td class="num">${fmt(ht, ccy)}</td></tr>`;
+  body += `<tr class="grand"><td class="lbl">Total ${ccy}</td>
+      <td class="num" colspan="4" style="text-align:center">${fmt(vt + ht, ccy)}</td></tr>`;
+  return `<div>
+    <div class="mini-title">Cash <span class="ccy-${cc}">${ccy}</span></div>
+    <table>
+      <thead>
+        <tr><th colspan="2" class="person-head p0">${P[0]}</th><th class="gap"></th><th colspan="2" class="person-head p1">${P[1]}</th></tr>
+        <tr class="colh"><th class="lbl">Bank</th><th>Amount</th><th class="gap"></th><th class="lbl">Bank</th><th>Amount</th></tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table></div>`;
+}
+
+/* =====================================================================
+   Section B — Questrade (people side by side, CAD + USD bands, ONE table)
+   ===================================================================== */
+function qtEntries(person, ccy) {
+  const out = QT_ACCOUNTS.map(acc => {
+    const q = D.questrade.find(x => x.person === person && x.account === acc && x.currency === ccy && !x.manual);
+    return { label: acc, contribution: q ? q.contribution : 0, invested: q ? q.invested : 0, pnl: q ? q.pnl : 0, cash: q ? q.cash : 0, manual: false };
+  });
+  D.questrade.filter(x => x.manual && x.person === person && x.currency === ccy)
+    .forEach(q => out.push({ label: q.account, contribution: q.contribution || 0, invested: q.invested || 0, pnl: q.pnl || 0, cash: q.cash || 0, manual: true }));
+  return out;
+}
+function entryCells(e, sums) {
+  if (!e) return `<td class="lbl"></td><td></td><td></td><td></td><td></td><td></td>`;
+  const total = e.invested + e.pnl + e.cash;
+  sums.contribution += e.contribution; sums.invested += e.invested; sums.pnl += e.pnl; sums.cash += e.cash; sums.total += total;
+  return `<td class="lbl">${e.label}${e.manual ? '<span class="tag-manual">MANUAL</span>' : ""}</td>
+    <td class="num">${fmtN(e.contribution)}</td>
+    <td class="num">${fmtN(e.invested)}</td>
+    <td class="num ${cl(e.pnl)}">${fmtN(e.pnl)}</td>
+    <td class="num">${fmtN(e.cash)}</td>
+    <td class="num">${fmtN(total)}</td>`;
+}
+function subtotalCells(label, s) {
+  return `<td class="lbl">${label}</td>
+    <td class="num">${fmtN(s.contribution)}</td><td class="num">${fmtN(s.invested)}</td>
+    <td class="num ${cl(s.pnl)}">${fmtN(s.pnl)}</td><td class="num">${fmtN(s.cash)}</td><td class="num">${fmtN(s.total)}</td>`;
+}
+function qtBand(ccy) {
+  const V = qtEntries(P[0], ccy), H = qtEntries(P[1], ccy);
+  const n = Math.max(V.length, H.length);
+  const sV = blank(), sH = blank();
+  let rows = `<tr class="ccy-band"><td colspan="13">${ccy}</td></tr>`;
+  for (let i = 0; i < n; i++) {
+    rows += `<tr>${entryCells(V[i], sV)}<td class="gap"></td>${entryCells(H[i], sH)}</tr>`;
+  }
+  rows += `<tr class="subtotal">${subtotalCells("Total " + ccy, sV)}<td class="gap"></td>${subtotalCells("Total " + ccy, sH)}</tr>`;
+  return { rows, sV, sH };
+}
+function questradeTable() {
+  const cad = qtBand("CAD"), usd = qtBand("USD");
+  const colh = `<th class="lbl">Account</th><th>Contribution</th><th>Invested</th><th>P&amp;L</th><th>Cash</th><th>Total</th>`;
+  return `<div class="scroll"><table>
+    <thead>
+      <tr><th colspan="6" class="person-head p0">${P[0]}</th><th class="gap"></th><th colspan="6" class="person-head p1">${P[1]}</th></tr>
+      <tr class="colh">${colh}<th class="gap"></th>${colh}</tr>
+    </thead>
+    <tbody>${cad.rows}${usd.rows}</tbody>
+  </table></div>`;
+}
+
+/* =====================================================================
+   Section C — Custom investments
+   ===================================================================== */
+function customTable() {
+  let body = "";
+  const tot = { CAD: 0, USD: 0 };
+  CUSTOM.forEach((c, i) => {
+    tot[c.currency] += c.currentValue;
+    body += `<tr>
+      <td class="lbl">${c.person}</td><td class="lbl">${c.name}</td><td class="lbl">${c.category}</td><td class="lbl">${c.currency}</td>
+      <td class="num">${c.totalQty ?? '<span class="muted">—</span>'}</td>
+      <td class="num">${c.avg != null ? fmt(c.avg, c.currency) : '<span class="muted">—</span>'}</td>
+      <td class="num">${fmt(c.cost, c.currency)}</td>
+      <td class="num">${c.kind === "lots" ? fmt(c.currentPrice, c.currency) : '<span class="muted">—</span>'}</td>
+      <td class="num">${fmt(c.currentValue, c.currency)}</td>
+      <td class="num ${cl(c.pnl)}">${fmtN(c.pnl)}</td></tr>`;
+  });
+  body += `<tr class="grand"><td class="lbl" colspan="8">Custom total — CAD</td><td class="num">${fmt(tot.CAD, "CAD")}</td><td></td></tr>`;
+  body += `<tr class="grand"><td class="lbl" colspan="8">Custom total — USD</td><td class="num">${fmt(tot.USD, "USD")}</td><td></td></tr>`;
+  return `<div class="scroll"><table>
+    <thead><tr class="colh">
+      <th class="lbl">Person</th><th class="lbl">Name</th><th class="lbl">Category</th><th class="lbl">Ccy</th>
+      <th>Qty</th><th>Avg Price</th><th>Cost</th><th>Cur. Price</th><th>Cur. Value</th><th>P&amp;L</th>
+    </tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+/* =====================================================================
+   Section D + E — totals & category breakdown
+   ===================================================================== */
+const sumBy = (items, c, v) => items.reduce((o, x) => (o[c(x)] += v(x), o), { CAD: 0, USD: 0 });
+const bankBy   = sumBy(D.bankBalances, b => b.currency, b => b.amount);
+const qtBy     = sumBy(D.questrade,    q => q.currency, q => q.invested + q.pnl + q.cash);
+const customBy = sumBy(CUSTOM,         c => c.currency, c => c.currentValue);
+
+const sources = [
+  { label: "Bank / cash", cad: bankBy.CAD,   usd: bankBy.USD },
+  { label: "Questrade",   cad: qtBy.CAD,     usd: qtBy.USD },
+  { label: "Custom",      cad: customBy.CAD, usd: customBy.USD },
+];
+const cadNative = sources.reduce((s, x) => s + x.cad, 0);
+const usdNative = sources.reduce((s, x) => s + x.usd, 0);
+const grandCAD = cadNative + usdNative * RATE;
+const grandUSD = usdNative + cadNative / RATE;
+
+/* category buckets (in CAD) */
+const CAT_COLORS = { Cash: "#1f5f8b", Equity: "#2e7d6b", "Dividend ETF": "#8a6d1f", Gold: "#c69214", Silver: "#8b94a0", Crypto: "#a0552e", Other: "#6b7785" };
+const cats = {};
+const addCat = (k, cad) => (cats[k] = (cats[k] || 0) + cad);
+addCat("Cash", toCAD(bankBy.CAD, "CAD") + toCAD(bankBy.USD, "USD"));
+D.questrade.forEach(q => addCat("Cash", toCAD(q.cash, q.currency)));
+D.questrade.forEach(q => { const mv = toCAD(q.invested + q.pnl, q.currency); addCat("Equity", mv * 0.6); addCat("Dividend ETF", mv * 0.4); });
+CUSTOM.forEach(c => addCat({ GOLD: "Gold", SILVER: "Silver", EQUITY: "Equity", CRYPTO: "Crypto" }[c.category] || "Other", toCAD(c.currentValue, c.currency)));
+const catTotal = Object.values(cats).reduce((s, v) => s + v, 0);
+const catRows = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+
+/* =====================================================================
+   Render
+   ===================================================================== */
+document.getElementById("report").innerHTML = `
+  <div class="report-head">
+    <div>
+      <h1>${D.meta.reportTitle}</h1>
+      <div class="sub">Bank cash · Questrade investments · custom assets — for ${P.join(" &amp; ")}</div>
+    </div>
+    <div class="meta-box">As of <strong>${D.meta.asOfDate}</strong><br><span class="rate-pill">USD/CAD = ${RATE.toFixed(2)}</span></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">A</span><h2>Bank / Cash Balances</h2><span class="hint">manual · people side by side</span></div>
+    <div class="two-up">${bankTable("CAD")}${bankTable("USD")}</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">B</span><h2>Questrade Investment Summary</h2><span class="hint">CAD + USD combined · auto + manual lines · Invested = cost basis, P&amp;L = market − cost</span></div>
+    ${questradeTable()}
+  </section>
+
+  <section class="page-break">
+    <div class="sec-head"><span class="sec-tag">C</span><h2>Custom Investments</h2><span class="hint">lot-based &amp; simple manual lines</span></div>
+    ${customTable()}
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">D</span><h2>Grand Total</h2><span class="hint">two parallel totals · USD converted at ${RATE.toFixed(2)}</span></div>
+    <div class="totals-grid">
+      <div class="total-card cad"><h3>NET WORTH — CAD</h3><div class="big num" style="text-align:left">${fmt(grandCAD, "CAD")}</div>
+        <div class="breakdown">${sources.map(s => `<div><span>${s.label}</span><span class="num">${fmt(s.cad + s.usd * RATE, "CAD")}</span></div>`).join("")}</div></div>
+      <div class="total-card usd"><h3>NET WORTH — USD</h3><div class="big num" style="text-align:left">${fmt(grandUSD, "USD")}</div>
+        <div class="breakdown">${sources.map(s => `<div><span>${s.label}</span><span class="num">${fmt(s.usd + s.cad / RATE, "USD")}</span></div>`).join("")}</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">E</span><h2>Category Breakdown</h2><span class="hint">% of net worth (shown in CAD)</span></div>
+    ${catRows.map(([name, cad]) => {
+      const pct = (cad / catTotal) * 100;
+      return `<div class="cat-row">
+        <div class="cat-name">${name}</div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct.toFixed(1)}%;background:${CAT_COLORS[name] || CAT_COLORS.Other}"></div></div>
+        <div class="cat-amt num">${fmt(cad, "CAD")}</div>
+        <div class="cat-pct">${pct.toFixed(1)}%</div></div>`;
+    }).join("")}
+    <div class="footnote">Questrade holdings split Equity/Dividend-ETF with a placeholder 60/40 ratio here — the real report buckets each holding by <code>symbolType</code>/<code>symbolSubType</code> (Gold, Silver, Index ETF, …).</div>
+  </section>
+`;
+</script>
+</body>
+</html>

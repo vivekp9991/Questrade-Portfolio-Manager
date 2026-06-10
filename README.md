@@ -1,5 +1,14 @@
 # Questrade Dividend Portfolio Manager
 
+> ⚠️ **READ FIRST — what is actually live (June 2026):**
+> The **deployed production system is the AWS serverless stack in [`Questrade-AWS/`](Questrade-AWS/)** —
+> SolidJS frontend on S3 + CloudFront (`dr1yvcko8rmxu.cloudfront.net`) and a SAM/Lambda + DynamoDB backend.
+> See **[`Questrade-AWS/docs/`](Questrade-AWS/docs/)** for the current architecture, the daily Step Functions
+> sync, token handling, and deploy runbook.
+>
+> Everything **below** (local microservices on ports 4001-4004 + MongoDB) describes the **LEGACY local stack**
+> in `Backend/` and `Frontend/` / `Frontend-v2/`, kept for reference only — it is **not** what's deployed.
+
 **Full-stack dividend portfolio tracking application with microservices backend and SolidJS frontend - All in one monorepo!**
 
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)]()
